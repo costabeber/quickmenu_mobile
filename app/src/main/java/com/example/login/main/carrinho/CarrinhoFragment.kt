@@ -16,10 +16,7 @@ interface CarrinhoActionsListener {
     fun onRemoverItem(position: Int)
 }
 
-// Interface para o Fragment avisar a Activity sobre a mudança do Total
-interface TotalUpdateListener {
-    fun onTotalChanged(novoTotal: Double, totalItens: Int)
-}
+
 
 class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
 
@@ -30,18 +27,6 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
     // Torna a lista de itens uma propriedade da classe
     private val listaItens = mutableListOf<ItemCarrinho>()
 
-    // Propriedade para se comunicar com a Activity
-    private lateinit var totalListener: TotalUpdateListener
-
-    // Garante que a Activity implemente a interface e armazena a referência
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is TotalUpdateListener) {
-            totalListener = context
-        } else {
-            throw RuntimeException("$context must implement TotalUpdateListener")
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -105,19 +90,12 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         // 1. Executa a remoção no Adapter
         carrinhoAdapter.removerItem(position)
 
-        // 2. NOTIFICA A ACTIVITY SOBRE A MUDANÇA
-        atualizarTotalNaActivity()
+        onTotalChanged(calcularTotal(), listaItens.size)
     }
 
     // Função para calcular o total
     private fun calcularTotal(): Double {
         return listaItens.sumOf { it.preco * it.quantidade }
-    }
-
-    // Função auxiliar para enviar a atualização
-    private fun atualizarTotalNaActivity() {
-        val novoTotal = calcularTotal()
-        totalListener.onTotalChanged(novoTotal, listaItens.size)
     }
 
     override fun onDestroyView() {
