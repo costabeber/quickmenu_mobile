@@ -1,4 +1,4 @@
-package com.example.login
+package com.QuickMenu.mobile
 
 import org.junit.Test
 

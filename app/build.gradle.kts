@@ -1,14 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-parcelize")
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.example.login"
+    namespace = "com.QuickMenu.mobile"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.login"
+        applicationId = "com.QuickMenu.mobile"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -51,4 +53,6 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation("androidx.navigation:navigation-fragment-ktx:2.9.5")
     implementation("androidx.navigation:navigation-ui-ktx:2.9.5")
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    implementation("com.google.firebase:firebase-auth:24.0.1")
 }

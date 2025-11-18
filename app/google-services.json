@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "279494796257",
+    "firebase_url": "https://quickmenu-1234-default-rtdb.firebaseio.com",
+    "project_id": "quickmenu-1234",
+    "storage_bucket": "quickmenu-1234.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:279494796257:android:89710e4597896f78fae8a0",
+        "android_client_info": {
+          "package_name": "com.QuickMenu.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXUC6x919ahXrxWbnD0HCsMaAEV61q2sE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

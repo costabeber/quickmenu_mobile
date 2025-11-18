@@ -1,4 +1,4 @@
-package com.example.login.auth
+package com.QuickMenu.mobile.auth
 
 import android.os.Bundle
 import android.util.Patterns
@@ -6,18 +6,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment // Alterado de AppCompatActivity
 import androidx.navigation.fragment.findNavController
-import com.example.login.R
+import com.QuickMenu.mobile.R
 
-import com.example.login.databinding.FragmentCadastroBinding
+import com.QuickMenu.mobile.databinding.FragmentCadastroBinding
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 
 class CadastroFragment : Fragment() { // Herdar de Fragment
 
-    // View Binding: Variável nullable (com _) para evitar vazamento de memória
     private var _binding: FragmentCadastroBinding? = null
-    // Acesso seguro ao binding (não-nulo)
     private val binding get() = _binding!!
+    private lateinit var auth: FirebaseAuth
 
     // 1. Inflar o layout (substitui onCreate e setContentView)
     override fun onCreateView(
@@ -25,18 +28,27 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflar o layout
         _binding = FragmentCadastroBinding.inflate(inflater, container, false)
-        return binding.root // Retorna a View raiz
+        return binding.root
     }
 
-    // 2. Configurar a lógica da View após ela ser criada
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val navController = findNavController()
+        auth = Firebase.auth
 
+        initListener()
+    }
+
+    private fun initListener(){
         binding.btnCadastrarUsuario.setOnClickListener {
+            validateData()
+        }
+    }
+
+    private fun validateData(){
+
             val nomeUsuario = binding.etNomeUsuario.text.toString().trim()
             val email = binding.etEmailCadastro.text.toString().trim()
             val senha = binding.etSenhaCadastro.text.toString().trim()
@@ -44,25 +56,47 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
             // NOTA: Em Fragments, use 'requireContext()' ou 'activity' para o Context
             if (nomeUsuario.isEmpty() || email.isEmpty() || senha.isEmpty()) {
                 Toast.makeText(requireContext(), "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
+                return
+
             } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 Toast.makeText(requireContext(), "Por favor, insira um e-mail válido.", Toast.LENGTH_SHORT).show()
+                return
+
             } else if (senha.length < 6) {
                 Toast.makeText(requireContext(), "A senha deve ter pelo menos 6 caracteres.", Toast.LENGTH_SHORT).show()
+                return
+
             } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Usuário '$nomeUsuario' cadastrado com o e-mail '$email'.",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                navController.navigate(R.id.action_cadastroFragment_to_loginFragment)
-
+                registerUser(email,senha)
 
             }
-        }
+
     }
 
-    // 3. Limpar a referência de binding para evitar vazamento de memória
+    private fun registerUser(email: String, password: String){
+        try {
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+
+                    if (task.isSuccessful) {
+                        findNavController().navigate(R.id.action_cadastroFragment_to_loginFragment)
+
+                    } else {
+                        binding.progressBar.isVisible = false
+                        Toast.makeText(
+                            requireContext(),
+                            task.exception?.message,
+                            Toast.LENGTH_SHORT,
+                        ).show()
+
+                    }
+                }
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), e.message.toString(), Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

@@ -7,7 +7,7 @@
 
     <activity
         android:id="@+id/splashActivity"
-        android:name="com.example.login.main.SplashActivity"
+        android:name="com.QuickMenu.mobile.root.SplashActivity"
         android:label="Splash/Roteamento"
         tools:layout="@layout/activity_splash">
 
@@ -27,7 +27,7 @@
 
     <activity
         android:id="@+id/authActivity"
-        android:name="com.example.login.auth.AuthActivity"
+        android:name="com.QuickMenu.mobile.auth.AuthActivity"
         android:label="Fluxo de Autenticação"
         tools:layout="@layout/activity_auth">
 
@@ -41,7 +41,7 @@
 
     <activity
         android:id="@+id/mainActivity"
-        android:name="com.example.login.main.MainActivity"
+        android:name="com.QuickMenu.mobile.main.MainActivity"
         android:label="App Principal"
         tools:layout="@layout/activity_main">
 

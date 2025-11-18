@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="149dp"
+    tools:context=".main.MainActivity"
+    android:background="@color/color_Primary">
+
+
+    <TextView
+        android:id="@+id/title_Itens"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="76dp"
+        android:text="Itens"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/title_description"
+        app:layout_constraintEnd_toStartOf="@+id/title_description"
+        app:layout_constraintTop_toTopOf="@+id/title_description"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <TextView
+        android:id="@+id/title_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="49dp"
+        android:text="Descrição"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/title_Price"
+        app:layout_constraintEnd_toStartOf="@+id/title_Price"
+        app:layout_constraintTop_toTopOf="@+id/title_Price" />
+
+    <TextView
+        android:id="@+id/title_Price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="60dp"
+        android:text="Preço"
+        android:textSize="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/Nome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="45dp"
+        android:layout_marginTop="20dp"
+        tools:text="Bolo Red Velvet"
+        android:textSize="16dp"
+        app:layout_constraintStart_toEndOf="@+id/imagem_Produto"
+        app:layout_constraintTop_toBottomOf="@+id/title_description" />
+
+    <TextView
+        android:id="@+id/Preco"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="31dp"
+        android:layout_marginTop="20dp"
+        android:textSize="20dp"
+        app:layout_constraintStart_toEndOf="@+id/Nome"
+        app:layout_constraintTop_toBottomOf="@+id/title_Price"
+        tools:text="$50,00" />
+
+    <ImageButton
+        android:id="@+id/btn_Lixo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="60dp"
+        android:background="@color/color_Primary"
+        android:contentDescription="Remove produto"
+        android:src="@drawable/ic_trashcan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Preco" />
+
+    <ImageButton
+        android:id="@+id/imagem_Produto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/color_Primary"
+        android:scaleType="centerCrop"
+        android:contentDescription="Imagem do produto"
+        tools:src="@drawable/bolo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title_Itens" />
+
+    <TextView
+        android:id="@+id/quantidade"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp"
+        tools:text="Quantidade:01"
+        android:textSize="16dp"
+        app:layout_constraintStart_toStartOf="@+id/Nome"
+        app:layout_constraintTop_toBottomOf="@+id/Nome" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintGuide_begin="149dp" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

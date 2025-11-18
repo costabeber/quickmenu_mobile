@@ -1,12 +1,10 @@
-package com.example.login.auth
+package com.QuickMenu.mobile.auth
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.example.login.R
-import com.example.login.databinding.ActivityAuthBinding
-import com.example.login.main.MainActivity
+import com.QuickMenu.mobile.databinding.ActivityAuthBinding
+import com.QuickMenu.mobile.main.MainActivity
 
 class AuthActivity : AppCompatActivity() {
 

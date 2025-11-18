@@ -1,11 +1,11 @@
-package com.example.login.main.usuario
+package com.QuickMenu.mobile.main.usuario
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.login.databinding.FragmentUsuarioBinding
+import com.QuickMenu.mobile.databinding.FragmentUsuarioBinding
 
 class UsuarioFragment : Fragment() {
 

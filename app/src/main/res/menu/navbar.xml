@@ -10,9 +10,9 @@
         android:icon="@drawable/ic_cart"
         android:id="@+id/carrinhoFragment"
         />
-    <item android:title="Notification"
+    <item android:title="Pedidos"
         android:icon="@drawable/ic_notification"
-        android:id="@+id/notificacaoFragment"
+        android:id="@+id/pedidosFragment"
         />
     <item android:title="Person"
         android:icon="@drawable/ic_person"

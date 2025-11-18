@@ -8,7 +8,7 @@
 
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.example.login.auth.LoginFragment"
+        android:name="com.QuickMenu.mobile.auth.LoginFragment"
         android:label="fragment_login"
         tools:layout="@layout/fragment_login" >
 
@@ -20,7 +20,7 @@
 
     <fragment
         android:id="@+id/cadastroFragment"
-        android:name="com.example.login.auth.CadastroFragment"
+        android:name="com.QuickMenu.mobile.auth.CadastroFragment"
         android:label="CadastroFragment"
         tools:layout="@layout/fragment_cadastro">
 
