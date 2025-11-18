@@ -15,12 +15,15 @@ import com.QuickMenu.mobile.databinding.FragmentCadastroBinding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 
 class CadastroFragment : Fragment() { // Herdar de Fragment
 
     private var _binding: FragmentCadastroBinding? = null
     private val binding get() = _binding!!
     private lateinit var auth: FirebaseAuth
+    private lateinit var banco: FirebaseFirestore
 
     // 1. Inflar o layout (substitui onCreate e setContentView)
     override fun onCreateView(
@@ -37,6 +40,7 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
         super.onViewCreated(view, savedInstanceState)
 
         auth = Firebase.auth
+        banco = Firebase.firestore
 
         initListener()
     }
@@ -79,9 +83,12 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
                 .addOnCompleteListener { task ->
 
                     if (task.isSuccessful) {
+
+                        saveUserData()
                         findNavController().navigate(R.id.action_cadastroFragment_to_loginFragment)
 
                     } else {
+
                         binding.progressBar.isVisible = false
                         Toast.makeText(
                             requireContext(),
@@ -95,6 +102,29 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
             Toast.makeText(requireContext(), e.message.toString(), Toast.LENGTH_SHORT).show()
         }
 
+    }
+
+    private fun saveUserData(){
+        val uid = auth.currentUser?.uid
+        val username = binding.etNomeUsuario.text.toString()
+
+        val userMap = hashMapOf(
+            "username" to username,
+            "email" to auth.currentUser?.email,
+            "profileImageUrl" to "DEFAULT_PROFILE_PIC", // Salva o link da foto padrão
+        )
+
+        banco.collection("Usuario")
+            .document(uid.toString())
+            .set(userMap) // Cria o documento com os dados iniciais
+            .addOnSuccessListener {
+                println("Perfil de usuário salvo com sucesso no Firestore: $uid")
+                // AQUI VOCÊ PODE NAVEGAR PARA A TELA PRINCIPAL
+            }
+            .addOnFailureListener { e ->
+                println("Falha ao salvar o perfil no Firestore: ${e.message}")
+                // Tratar falha no banco de dados (embora o Auth tenha funcionado)
+            }
     }
 
     override fun onDestroyView() {
