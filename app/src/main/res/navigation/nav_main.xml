@@ -25,9 +25,9 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/notificacaoFragment"
-        android:name="com.QuickMenu.mobile.main.notificacao.NotificacaoFragment"
+        android:id="@+id/pedidosFragment"
+        android:name="com.QuickMenu.mobile.main.pedidos.PedidosFragment"
         android:label="Notificações"
-        tools:layout="@layout/fragment_notificacao" />
+        tools:layout="@layout/fragment_pedidos" />
 
 </navigation>
