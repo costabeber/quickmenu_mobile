@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.QuickMenu.mobile.R
@@ -58,11 +59,15 @@ class LoginFragment : Fragment() {
         val senha = binding.etSenha.text.toString().trim()
 
         if (email.isEmpty() || senha.isEmpty()) {
-            Toast.makeText(requireContext(), "Preencha todos os campos", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(requireContext(), "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
 
-            (requireActivity() as AuthActivity).navigateToMain()
+            Toast.makeText(requireContext(),
+                "Preencha todos os campos",
+                Toast.LENGTH_SHORT).show()
+        } else {
+
+            binding.progressBar.isVisible = true
+            login(email,senha)
+
         }
     }
 
@@ -71,9 +76,26 @@ class LoginFragment : Fragment() {
             auth = Firebase.auth
 
             auth.signInWithEmailAndPassword(email, senha)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful){
+                        Toast.makeText(requireContext(), "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
+
+                        (requireActivity() as AuthActivity).navigateToMain()
+                    }
+                    else{
+                        Toast.makeText(requireContext(),
+                            task.exception.toString(),
+                            Toast.LENGTH_SHORT).show()
+                        binding.progressBar.isVisible = false
+                    }
+                }
+
+
         }
         catch (erro : Exception){
-
+            Toast.makeText(requireContext(),
+                erro.message,
+                Toast.LENGTH_SHORT).show()
         }
     }
 
