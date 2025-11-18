@@ -49,7 +49,7 @@ class LoginFragment : Fragment() {
 
     private fun initListeners(){
         binding.btnEntrar.setOnClickListener {
-
+            validateData()
         }
     }
     private fun validateData(){
@@ -66,8 +66,15 @@ class LoginFragment : Fragment() {
         }
     }
 
-    private fun login(){
+    private fun login(email: String, senha: String){
+        try {
+            auth = Firebase.auth
 
+            auth.signInWithEmailAndPassword(email, senha)
+        }
+        catch (erro : Exception){
+
+        }
     }
 
     private fun linkCadastro(){

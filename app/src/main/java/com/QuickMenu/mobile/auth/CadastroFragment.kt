@@ -42,7 +42,9 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
     }
 
     private fun initListener(){
-        binding.btnCadastrarUsuario.setOnClickListener { validateData()}
+        binding.btnCadastrarUsuario.setOnClickListener {
+            validateData()
+        }
     }
 
     private fun validateData(){

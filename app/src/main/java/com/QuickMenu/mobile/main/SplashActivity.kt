@@ -1,11 +1,15 @@
 package com.QuickMenu.mobile.root
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.Navigation
 import com.QuickMenu.mobile.R
 import androidx.navigation.findNavController
+import com.QuickMenu.mobile.auth.AuthActivity
 import com.QuickMenu.mobile.databinding.ActivitySplashBinding
+import com.QuickMenu.mobile.main.MainActivity
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -26,23 +30,29 @@ class SplashActivity : AppCompatActivity() {
 
         auth = Firebase.auth
 
-        /*checkAuth()*/
+        checkAuth()
 
 
     }
 
     private fun checkAuth(){
 
-        val navController = binding.main.findNavController()
-
         val isUserLoggedIn = auth.currentUser != null
 
-        if(isUserLoggedIn){
-            navController.navigate(R.id.action_splash_to_main)
+
+        val nextActivityClass = if (isUserLoggedIn) {
+            MainActivity::class.java
+
+        } else {
+            AuthActivity::class.java
         }
-        else{
-            navController.navigate(R.id.action_splash_to_auth)
+
+        val intent = Intent(this, nextActivityClass).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
+
+        startActivity(intent)
+        finish()
 
     }
     override fun onDestroy() {
