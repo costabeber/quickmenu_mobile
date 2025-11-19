@@ -1,10 +1,11 @@
 package com.QuickMenu.mobile.main.carrinho
 
 data class ItemCarrinho(
-    val id: String,
-    val nome: String,
-    val preco: Double,
-    var quantidade: Int,
-    val imagem: Int
-    //val imagemUrl: String usar dps no Banco
-)
+    val produtoId: String = "",
+    val nome: String = "",
+    val preco: Double = 0.0,
+    var quantidade: Int = 0,
+    val imageUrl: String? = null,
+) {
+    constructor() : this("", "", 0.0, 0, null)
+}

@@ -5,6 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.QuickMenu.mobile.R
 import com.QuickMenu.mobile.databinding.ItemCarrinhoBinding
+import kotlin.inc
+import kotlin.toString
 
 class CarrinhoAdapter (private val itens: MutableList<ItemCarrinho>,
                        private val listener: CarrinhoActionsListener)
@@ -31,7 +33,29 @@ class CarrinhoAdapter (private val itens: MutableList<ItemCarrinho>,
                 listener.onRemoverItem(adapterPosition)
             }
 
-            // TODO ... carregar a imagem, etc.
+            binding.btnAddQtd.setOnClickListener {
+                // 1. Atualiza o objeto localmente
+                item.quantidade++
+
+                // 2. Atualiza a UI imediatamente (feedback visual)
+                binding.quantidade.text = item.quantidade.toString()
+
+                // 3. Notifica o Fragment para salvar a mudança no Firestore
+                listener.onUpdateItem(item)
+            }
+
+            // Botão Diminuir Quantidade (-)
+            binding.btnSubQtd.setOnClickListener {
+                if (item.quantidade > 1) {
+                    // Diminuir
+                    item.quantidade--
+                    binding.quantidade.text = item.quantidade.toString()
+                    listener.onUpdateItem(item)
+                } else {
+                    // Remover (quantidade atinge zero)
+                    listener.onRemoverItem(adapterPosition)
+                }
+            }
         }
     }
 

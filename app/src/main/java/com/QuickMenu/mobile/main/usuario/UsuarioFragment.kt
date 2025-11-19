@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import java.math.BigInteger
 
 class UsuarioFragment : Fragment() {
 
@@ -26,6 +27,7 @@ class UsuarioFragment : Fragment() {
 
     //salva o nome de usuário depois de ter executado uma vez
     private var cachedUsername: String? = null
+    private var cachedEmail: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,19 +47,27 @@ class UsuarioFragment : Fragment() {
 
         initListener()
 
-        if (cachedUsername!=null){
 
+
+        if (cachedEmail != null) {
+            binding.email.text = cachedEmail
+
+        } else {
+            val currentEmail = auth.currentUser?.email
+            cachedEmail = currentEmail // Salva no cache
+            binding.email.text = currentEmail // Atualiza a UI
+
+        }
+        if (cachedUsername!=null ){
             binding.nome.text = cachedUsername
 
         }else{
-
             loadUsernameString(onSuccess = { username ->
                 cachedUsername = username
                 binding.nome.text = username
 
             } , onFailure = { error ->
                 println("Falha ao carregar o nome: ${error.message}")
-
             })
         }
 
@@ -110,6 +120,7 @@ class UsuarioFragment : Fragment() {
                 onFailure(exception)
             }
     }
+
 
     // 2. Limpeza essencial do binding
     override fun onDestroyView() {
