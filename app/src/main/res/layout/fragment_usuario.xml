@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Perfil"
-        android:textSize="32dp"
+        android:textSize="22dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,13 +21,14 @@
 
     <ImageView
         android:id="@+id/foto_perfil"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="128dp"
+        android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/titulo"
-        app:srcCompat="@drawable/mamaetaytay" />
+        app:srcCompat="@drawable/default_profile_picture" />
 
     <TextView
         android:id="@+id/label_nome"
@@ -36,7 +37,7 @@
         android:layout_marginStart="28dp"
         android:layout_marginTop="24dp"
         android:text="Nome"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/foto_perfil" />
 
@@ -48,7 +49,7 @@
         android:layout_marginStart="28dp"
         android:text=""
         tools:text = "Taylor Swift"
-        android:textSize="16dp"
+        android:textSize="22dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/label_nome" />
 
@@ -59,7 +60,7 @@
         android:layout_marginStart="28dp"
         android:layout_marginTop="16dp"
         android:text="Email"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/nome" />
 
@@ -70,7 +71,7 @@
         android:layout_marginHorizontal="30dp"
         android:layout_marginStart="28dp"
         android:text="Olivia13@gmail.com"
-        android:textSize="16dp"
+        android:textSize="22dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/label_email" />
 
@@ -81,7 +82,7 @@
         android:layout_marginStart="48dp"
         android:layout_marginTop="29dp"
         android:text="Meus Restaurantes"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/email" />
 
