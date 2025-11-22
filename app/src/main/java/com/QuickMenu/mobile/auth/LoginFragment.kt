@@ -19,6 +19,7 @@ import com.QuickMenu.mobile.databinding.FragmentLoginBinding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginFragment : Fragment() {
 
@@ -39,13 +40,9 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         initListeners()
 
-
         linkCadastro()
-
-
     }
 
     private fun initListeners(){
@@ -89,9 +86,8 @@ class LoginFragment : Fragment() {
                         binding.progressBar.isVisible = false
                     }
                 }
-
-
         }
+
         catch (erro : Exception){
             Toast.makeText(requireContext(),
                 erro.message,

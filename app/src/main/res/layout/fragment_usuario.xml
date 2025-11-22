@@ -8,10 +8,10 @@
     tools:context=".main.MainActivity">
 
     <TextView
-        android:id="@+id/textView5"
+        android:id="@+id/titulo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Usuário"
+        android:text="Perfil"
         android:textSize="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -20,56 +20,59 @@
         app:layout_constraintVertical_bias="0.055" />
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/foto_perfil"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:layout_marginEnd="128dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView5"
+        app:layout_constraintTop_toBottomOf="@+id/titulo"
         app:srcCompat="@drawable/mamaetaytay" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/label_nome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="36dp"
+        android:layout_marginStart="28dp"
         android:layout_marginTop="24dp"
         android:text="Nome"
         android:textSize="20dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintTop_toBottomOf="@+id/foto_perfil" />
 
-    <EditText
-        android:id="@+id/editText"
+    <TextView
+        android:id="@+id/nome"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginHorizontal="30dp"
-        android:text="Taylor Swift"
+        android:layout_marginStart="28dp"
+        android:text=""
+        tools:text = "Taylor Swift"
         android:textSize="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintTop_toBottomOf="@+id/label_nome" />
 
     <TextView
-        android:id="@+id/email"
+        android:id="@+id/label_email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
+        android:layout_marginStart="28dp"
         android:layout_marginTop="16dp"
         android:text="Email"
         android:textSize="20dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText" />
+        app:layout_constraintTop_toBottomOf="@+id/nome" />
 
-    <EditText
-        android:id="@+id/editText2"
+    <TextView
+        android:id="@+id/email"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginHorizontal="30dp"
+        android:layout_marginStart="28dp"
         android:text="Olivia13@gmail.com"
         android:textSize="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/email" />
+        app:layout_constraintTop_toBottomOf="@+id/label_email" />
 
     <TextView
         android:id="@+id/textView4"
@@ -80,7 +83,7 @@
         android:text="Meus Restaurantes"
         android:textSize="20dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText2" />
+        app:layout_constraintTop_toBottomOf="@+id/email" />
 
     <LinearLayout
         android:id="@+id/linearLayout"

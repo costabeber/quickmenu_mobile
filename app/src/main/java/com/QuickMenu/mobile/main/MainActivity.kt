@@ -1,10 +1,12 @@
 package com.QuickMenu.mobile.main
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.QuickMenu.mobile.auth.AuthActivity
 // Importa o binding do layout da Activity (que agora deve conter apenas o FragmentContainerView)
 import com.QuickMenu.mobile.databinding.ActivityMainBinding
 
@@ -27,6 +29,15 @@ class MainActivity : AppCompatActivity() {
 
         binding.navbar.setupWithNavController(navController)
 
+    }
+
+    fun navigateToAuth() {
+        // Lógica de navegação de Activity para Activity
+        val intent = Intent(this, AuthActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish() // Fecha AuthActivity
     }
 
 }
