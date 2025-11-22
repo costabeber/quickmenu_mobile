@@ -111,7 +111,7 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
         val userMap = hashMapOf(
             "username" to username,
             "email" to auth.currentUser?.email,
-            "profileImageUrl" to "DEFAULT_PROFILE_PIC", // Salva o link da foto padrão
+            "profileImageUrl" to "https://ibb.co/d426DjQJ", // Salva o link da foto padrão
         )
 
         banco.collection("Usuario")

@@ -1,40 +1,53 @@
 package com.QuickMenu.mobile.main.usuario
 
+import android.app.AlertDialog
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.navigation.R
-import androidx.navigation.fragment.findNavController
-import com.QuickMenu.mobile.auth.AuthActivity
+import androidx.lifecycle.lifecycleScope
 import com.QuickMenu.mobile.databinding.FragmentUsuarioBinding
 import com.QuickMenu.mobile.main.MainActivity
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
-import java.math.BigInteger
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 
 class UsuarioFragment : Fragment() {
 
-    // 1. Configuração do View Binding segura para Fragments
     private var _binding: FragmentUsuarioBinding? = null
     private val binding get() = _binding!!
     private lateinit var banco: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
 
-    //salva o nome de usuário depois de ter executado uma vez
-    private var cachedUsername: String? = null
-    private var cachedEmail: String? = null
+    // Variável para guardar a URL atual para visualização
+    private var currentPhotoUrl: String? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // Infla o layout do usuário
+    // Contrato para abrir a galeria
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            uploadImageToImageBB(uri)
+        }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentUsuarioBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -42,87 +55,200 @@ class UsuarioFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         banco = Firebase.firestore
-
         auth = Firebase.auth
 
         initListener()
-
-
-
-        if (cachedEmail != null) {
-            binding.email.text = cachedEmail
-
-        } else {
-            val currentEmail = auth.currentUser?.email
-            cachedEmail = currentEmail // Salva no cache
-            binding.email.text = currentEmail // Atualiza a UI
-
-        }
-        if (cachedUsername!=null ){
-            binding.nome.text = cachedUsername
-
-        }else{
-            loadUsernameString(onSuccess = { username ->
-                cachedUsername = username
-                binding.nome.text = username
-
-            } , onFailure = { error ->
-                println("Falha ao carregar o nome: ${error.message}")
-            })
-        }
-
-
-
-        // Adicione aqui qualquer lógica de inicialização de UI específica da tela de usuário
-        // Ex: Carregar dados do usuário, exibir mensagens, etc.
+        loadUserData()
     }
 
-    private fun initListener(){
-        binding.voltar.setOnClickListener{
-            logout()
+    private fun initListener() {
+        binding.voltar.setOnClickListener { logout() }
+
+        binding.fotoPerfil.setOnClickListener {
+            showOptionsDialog()
         }
     }
-    private fun logout(){
 
+    //POP-UP
+    private fun showOptionsDialog() {
+        val options = arrayOf("Visualizar foto", "Alterar foto")
+
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Foto de Perfil")
+        builder.setItems(options) { _, which ->
+            when (which) {
+                0 -> showFullImage() // Visualizar
+                1 -> pickImageLauncher.launch("image/*") // Alterar
+            }
+        }
+        builder.setNegativeButton("Cancelar", null)
+        builder.show()
+    }
+
+    //VISUALIZAR IMAGEM
+    private fun showFullImage() {
+        if (currentPhotoUrl.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Nenhuma foto para visualizar", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // 1. Criar um container (LinearLayout) para dar margem e garantir o layout
+        val container = android.widget.LinearLayout(requireContext())
+        container.orientation = android.widget.LinearLayout.VERTICAL
+        val params = android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(50, 50, 50, 50) // Margens laterais
+        container.layoutParams = params
+
+        // 2. Criar a ImageView
+        val imageView = ImageView(requireContext())
+
+        // Define que a imagem deve preencher a largura, mas ajustar a altura
+        imageView.layoutParams = android.view.ViewGroup.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            1000 // Altura fixa inicial grande ou WRAP_CONTENT com minHeight
+        )
+
+        // Configurações visuais
+        imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+        imageView.adjustViewBounds = true
+
+        // Adiciona a imagem ao container
+        container.addView(imageView)
+
+        //Carregar com Glide
+        Glide.with(this)
+            .load(currentPhotoUrl)
+            .placeholder(com.QuickMenu.mobile.R.drawable.default_profile_picture) // Mostra algo enquanto carrega
+            .into(imageView)
+
+        // Exibir o Dialog com o container
+        AlertDialog.Builder(requireContext())
+            .setTitle("Foto de Perfil")
+            .setView(container) // Passa o container, não a imagem direta
+            .setPositiveButton("Fechar", null)
+            .show()
+    }
+
+    // --- UPLOAD PARA IMAGE BB ---
+    private fun uploadImageToImageBB(imageUri: Uri) {
+        Toast.makeText(requireContext(), "Fazendo upload...", Toast.LENGTH_SHORT).show()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val apiKey = "3b1fc0436f09d45aab3d2388edf3099e"
+                val client = OkHttpClient()
+
+                val inputStream = requireContext().contentResolver.openInputStream(imageUri)
+                val bytes = inputStream?.readBytes()
+                inputStream?.close()
+
+                if (bytes == null) throw Exception("Erro ao ler arquivo")
+
+                val requestBody = MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("key", apiKey)
+                    .addFormDataPart("image", "profile.jpg", bytes.toRequestBody("image/jpeg".toMediaTypeOrNull()))
+                    .build()
+
+                val request = Request.Builder()
+                    .url("https://api.imgbb.com/1/upload")
+                    .post(requestBody)
+                    .build()
+
+                val response = client.newCall(request).execute()
+                val responseString = response.body?.string()
+
+                if (response.isSuccessful && responseString != null) {
+                    val json = JSONObject(responseString)
+                    val newUrl = json.getJSONObject("data").getString("url")
+
+                    // Voltar para a thread principal para salvar no banco
+                    withContext(Dispatchers.Main) {
+                        updateFirestore(newUrl)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "Erro no servidor de imagem", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    // ATUALIZAR FIRESTORE
+    private fun updateFirestore(url: String) {
+        val uid = auth.currentUser?.uid ?: return
+
+        banco.collection("Usuario").document(uid)
+            .update("profileImageUrl", url)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Foto atualizada com sucesso!", Toast.LENGTH_SHORT).show()
+
+                // Atualiza a interface com a nova URL
+                loadProfileImage(url)
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Erro ao salvar no banco", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // CARREGAR DADOS DO BANCO
+    private fun loadUserData() {
+        val uid = auth.currentUser?.uid ?: return
+
+        // Pega dados simples do Auth
+        binding.email.text = auth.currentUser?.email
+
+        //Pega dados do Firestore
+        banco.collection("Usuario").document(uid).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val username = document.getString("username")
+                    val photoUrl = document.getString("profileImageUrl")
+
+                    binding.nome.text = username ?: "Sem nome"
+
+                    // Se tiver URL no banco, carrega. Se não, usa imagem padrão
+                    if (!photoUrl.isNullOrEmpty()) {
+                        loadProfileImage(photoUrl)
+                    }
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Erro ao buscar dados", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // Função auxiliar para carregar a imagem na tela usando Glide
+    private fun loadProfileImage(url: String) {
+        currentPhotoUrl = url // Atualiza a variável global para o "Visualizar" usar
+
+        try {
+            Glide.with(this)
+                .load(url)
+                .circleCrop() // Corta em círculo
+                .diskCacheStrategy(DiskCacheStrategy.ALL) // Cache inteligente
+                .placeholder(com.QuickMenu.mobile.R.drawable.default_profile_picture) // Enquanto carrega
+                .error(com.QuickMenu.mobile.R.drawable.default_profile_picture) // Se der erro
+                .into(binding.fotoPerfil)
+        } catch (e: Exception) {
+            // Evita crash se a tela já tiver fechado
+        }
+    }
+
+    private fun logout() {
         auth.signOut()
         parentFragmentManager.popBackStack()
         (requireActivity() as MainActivity).navigateToAuth()
     }
 
-    // Função que retorna o onSuccess ou o onFailure igual o Firebase normal
-    fun loadUsernameString(onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
-
-        val uid = auth.currentUser?.uid
-
-        if (uid.isNullOrEmpty()) {
-            onFailure(Exception("Usuário não logado ou UID indisponível."))
-            return
-        }
-
-        // Acessa o documento
-        banco.collection("Usuario").document(uid)
-            .get() // Busca única
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    // 💡 SOLUÇÃO: Usamos getString() para ler um campo específico.
-                    val username = document.getString("username")
-
-                    if (username != null) {
-                        onSuccess(username) // Retorna APENAS a String
-                    } else {
-                        onFailure(Exception("O campo 'username' não foi encontrado ou está nulo no documento."))
-                    }
-                } else {
-                    onFailure(Exception("Documento do usuário não encontrado no Firestore."))
-                }
-            }
-            .addOnFailureListener { exception ->
-                onFailure(exception)
-            }
-    }
-
-
-    // 2. Limpeza essencial do binding
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
