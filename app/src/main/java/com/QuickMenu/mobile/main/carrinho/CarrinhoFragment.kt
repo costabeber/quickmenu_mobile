@@ -215,7 +215,7 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Importante: Parar de ouvir o banco quando sair da tela para economizar dados
+        // Para de ouvir o banco quando sair da tela para economizar dados
         firestoreListener?.remove()
         (activity as? AppCompatActivity)?.setSupportActionBar(null)
         _binding = null
