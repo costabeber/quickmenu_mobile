@@ -58,12 +58,12 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         setupToolbar()
         setupRecyclerView()
 
-        // Inicia o "olheiro" do banco de dados para manter tudo sincronizado
+        // Garante a sincronia
         startRealtimeCartListener()
 
-        // --- BOTÃO DE FINALIZAR COMPRA ---
-        // Certifique-se que existe um botão com id 'btnFinalizar' no seu XML,
-        // ou troque pelo ID do seu botão de "Comprar"
+        //BOTÃO DE FINALIZAR COMPRA
+
+
         binding.btnComprar.setOnClickListener {
             if (listaItens.isNotEmpty()) {
                 finalizarPedido()
@@ -72,7 +72,7 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
             }
         }
 
-        // Botão de teste para adicionar itens (se ainda precisar)
+        // Botão de teste para adicionar itens
         binding.btnAddItemTeste.setOnClickListener {
             val novoItem = ItemCarrinho(
                 produtoId = "ID_${System.currentTimeMillis()}",
@@ -99,37 +99,37 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         (activity as AppCompatActivity).supportInvalidateOptionsMenu()
     }
 
-    // --- LÓGICA DE FINALIZAR PEDIDO (NOVA) ---
+    // FINALIZAR PEDIDO
     private fun finalizarPedido() {
         val userId = auth.currentUser?.uid ?: return
 
-        // 1. Gerar ID baseado na Data e Hora (yyyyMMdd_HHmmss)
+        // Gerar ID baseado na Data e Hora (yyyyMMdd_HHmmss)
         val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
         val dataAtual = Date()
         val pedidoId = sdf.format(dataAtual)
 
-        // 2. Calcular preço total
+        //  Calcular preço total
         val precoTotal = calcularTotal()
 
-        // 3. Criar referência para o novo pedido
+        //  Criar referência para o novo pedido
         val pedidoRef = banco.collection("Usuario").document(userId)
             .collection("Pedidos").document(pedidoId)
 
-        // 4. Dados do cabeçalho do pedido
+        // Dados do cabeçalho do pedido
         val dadosPedido = hashMapOf(
             "idRestaurante" to "", // Por enquanto vazio, conforme solicitado
             "precoTotal" to precoTotal,
             "dataPedido" to dataAtual // Útil para ordenação futura
         )
 
-        // 5. Iniciar um BATCH (Lote de escrita).
-        // Isso garante que cria o pedido E apaga o carrinho ao mesmo tempo.
+        // Iniciar um BATCH (Lote de escrita).
+        // garante que cria o pedido E apaga o carrinho ao mesmo tempo.
         val batch = banco.batch()
 
         // A) Salva os dados principais do pedido
         batch.set(pedidoRef, dadosPedido)
 
-        // B) Move os itens do Carrinho para dentro do Pedido e prepara a deleção do Carrinho
+        //Move os itens do Carrinho para dentro do Pedido e prepara a deleção do Carrinho
         val carrinhoRef = banco.collection("Usuario").document(userId).collection("Carrinho")
 
         for (item in listaItens) {
@@ -142,7 +142,7 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
             batch.delete(itemNoCarrinhoRef)
         }
 
-        // 6. Executa todas as operações (Commit)
+        // Executa todas as operações
         batch.commit()
             .addOnSuccessListener {
                 Toast.makeText(context, "Pedido realizado com sucesso!", Toast.LENGTH_LONG).show()
@@ -155,7 +155,7 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
             }
     }
 
-    // --- LÓGICA EM TEMPO REAL (JÁ EXISTENTE) ---
+
     private fun getCartRef() =
         auth.currentUser?.uid?.let { uid ->
             banco.collection("Usuario").document(uid).collection("Carrinho")
