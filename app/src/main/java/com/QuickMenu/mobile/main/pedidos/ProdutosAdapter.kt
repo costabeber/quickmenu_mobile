@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.QuickMenu.mobile.databinding.ItemProdutoPedidoBinding
 class ProdutosAdapter(
-    private val produtos: List<Produto>
+    private val produtoPedidos: List<ProdutoPedido>
 ) : RecyclerView.Adapter<ProdutosAdapter.ProdutoViewHolder>() {
 
     class ProdutoViewHolder(val binding: ItemProdutoPedidoBinding) :
@@ -21,7 +21,7 @@ class ProdutosAdapter(
     }
 
     override fun onBindViewHolder(holder: ProdutoViewHolder, position: Int) {
-        val produto = produtos[position]
+        val produto = produtoPedidos[position]
         with(holder.binding) {
             nomeProduto.text = produto.nome
             quantidadeProduto.text = "${produto.quantidade}x"
@@ -29,5 +29,5 @@ class ProdutosAdapter(
         }
     }
 
-    override fun getItemCount(): Int = produtos.size
+    override fun getItemCount(): Int = produtoPedidos.size
 }

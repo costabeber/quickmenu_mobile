@@ -16,7 +16,7 @@ class CarrinhoAdapter (private val itens: MutableList<ItemCarrinho>,
 
         fun bind(item: ItemCarrinho) {
             binding.Nome.text = item.nome
-            binding.quantidade.text = "Quantidade: ${item.quantidade}"
+            binding.quantidade.text = "${item.quantidade}"
             binding.Preco.text = "R$ ${item.preco}"
 
             // AQUI: Carrega a imagem de Placeholder

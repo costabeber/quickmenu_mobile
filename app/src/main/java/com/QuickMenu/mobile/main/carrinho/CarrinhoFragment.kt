@@ -1,11 +1,15 @@
 package com.QuickMenu.mobile.main.carrinho
 
+import android.annotation.SuppressLint
 import android.icu.text.NumberFormat
+import android.icu.text.SimpleDateFormat
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
@@ -17,13 +21,12 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
+import java.util.Date
 import java.util.Locale
 
-// Interface para o Fragment avisar o Adapter sobre remoção
 interface CarrinhoActionsListener {
     fun onRemoverItem(position: Int)
-
-    fun onUpdateItem(Item: ItemCarrinho)
+    fun onUpdateItem(item: ItemCarrinho)
 }
 
 class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
@@ -33,13 +36,10 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var banco: FirebaseFirestore
-
-    private var firestoreListener: ListenerRegistration? = null // Listener em tempo real
+    private var firestoreListener: ListenerRegistration? = null
 
     private lateinit var carrinhoAdapter: CarrinhoAdapter
-    // Torna a lista de itens uma propriedade da classe
     private val listaItens = mutableListOf<ItemCarrinho>()
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -55,141 +55,168 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         auth = Firebase.auth
         banco = Firebase.firestore
 
-        /*// 1. Inicializa a lista de dados (populando, já que agora é uma propriedade)
-        listaItens.add(ItemCarrinho("1", "Bolo Red Velvet", 50.00, 1, "3"))
-        listaItens.add(ItemCarrinho("2", "Brigadeiro de morango", 9.00, 1, "3"))*/
+        setupToolbar()
+        setupRecyclerView()
 
-        // 2. Cria e INICIALIZA a instância do seu adapter
-        carrinhoAdapter = CarrinhoAdapter(listaItens, this)
-
-        // 3. Configura a RecyclerView
-        binding.rvCarrinhoItens.layoutManager = LinearLayoutManager(context)
-        binding.rvCarrinhoItens.adapter = carrinhoAdapter
-
+        // Garante a sincronia
         startRealtimeCartListener()
 
-        // 4. Lógica de clique de adição (na Activity)
+        //BOTÃO DE FINALIZAR COMPRA
+
+
+        binding.btnComprar.setOnClickListener {
+            if (listaItens.isNotEmpty()) {
+                finalizarPedido()
+            } else {
+                Toast.makeText(context, "Seu carrinho está vazio!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Botão de teste para adicionar itens
         binding.btnAddItemTeste.setOnClickListener {
             val novoItem = ItemCarrinho(
                 produtoId = "ID_${System.currentTimeMillis()}",
-                nome = "Item Adicionado (TESTE)",
+                nome = "Item Teste",
                 preco = 10.00,
                 quantidade = 1,
                 imageUrl = ""
             )
-
             saveOrUpdateCartItem(novoItem)
         }
+    }
 
-        // 1. Encontra a Toolbar dentro do layout deste Fragment
-        val toolbar = binding.toolbar // **VERIFIQUE O ID DA SUA TOOLBAR NO XML DO CARRINHO**
+    private fun setupRecyclerView() {
+        carrinhoAdapter = CarrinhoAdapter(listaItens, this)
+        binding.rvCarrinhoItens.layoutManager = LinearLayoutManager(context)
+        binding.rvCarrinhoItens.adapter = carrinhoAdapter
+    }
 
-        // 2. Define a Toolbar do Fragment como a ActionBar da Activity
+    private fun setupToolbar() {
+        val toolbar = binding.toolbar
         (activity as AppCompatActivity).setSupportActionBar(toolbar)
-
-        // 3. Vincula a Toolbar ao NavController do Fragment
-        // Isso faz com que:
-        // a) O título (label) do nav_graph seja exibido.
-        // b) O botão de voltar (seta) apareça.
-        // c) O clique no botão de voltar navegue para trás (popBackStack).
         val navController = findNavController()
         toolbar.setupWithNavController(navController)
         (activity as AppCompatActivity).supportInvalidateOptionsMenu()
     }
 
+    // FINALIZAR PEDIDO
+    private fun finalizarPedido() {
+        val userId = auth.currentUser?.uid ?: return
+
+        // Gerar ID baseado na Data e Hora (yyyyMMdd_HHmmss)
+        val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+        val dataAtual = Date()
+        val pedidoId = sdf.format(dataAtual)
+
+        //  Calcular preço total
+        val precoTotal = calcularTotal()
+
+        //  Criar referência para o novo pedido
+        val pedidoRef = banco.collection("Usuario").document(userId)
+            .collection("Pedidos").document(pedidoId)
+
+        // Dados do cabeçalho do pedido
+        val dadosPedido = hashMapOf(
+            "idRestaurante" to "", // Por enquanto vazio, conforme solicitado
+            "precoTotal" to precoTotal,
+            "dataPedido" to dataAtual // Útil para ordenação futura
+        )
+
+        // Iniciar um BATCH (Lote de escrita).
+        // garante que cria o pedido E apaga o carrinho ao mesmo tempo.
+        val batch = banco.batch()
+
+        // A) Salva os dados principais do pedido
+        batch.set(pedidoRef, dadosPedido)
+
+        //Move os itens do Carrinho para dentro do Pedido e prepara a deleção do Carrinho
+        val carrinhoRef = banco.collection("Usuario").document(userId).collection("Carrinho")
+
+        for (item in listaItens) {
+            // Copia item para coleção Pedidos -> Itens
+            val itemNoPedidoRef = pedidoRef.collection("Itens").document(item.produtoId)
+            batch.set(itemNoPedidoRef, item)
+
+            // Deleta item da coleção Carrinho
+            val itemNoCarrinhoRef = carrinhoRef.document(item.produtoId)
+            batch.delete(itemNoCarrinhoRef)
+        }
+
+        // Executa todas as operações
+        batch.commit()
+            .addOnSuccessListener {
+                Toast.makeText(context, "Pedido realizado com sucesso!", Toast.LENGTH_LONG).show()
+                // A UI vai limpar sozinha porque temos o startRealtimeCartListener ouvindo que deletamos os itens!
+                // Aqui você pode navegar para uma tela de "Sucesso" ou "Meus Pedidos"
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Erro ao finalizar: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("Carrinho", "Erro batch: ", e)
+            }
+    }
+
+
     private fun getCartRef() =
         auth.currentUser?.uid?.let { uid ->
             banco.collection("Usuario").document(uid).collection("Carrinho")
         }
-    // Inicia a leitura e sincronização em tempo real do carrinho do usuário.
-    private fun startRealtimeCartListener() {
-        val cartRef = getCartRef() ?: run {
-            android.util.Log.e("Carrinho", "Usuário não logado. Listener não iniciado.")
-            // Opcional: mostrar mensagem de erro na UI
-            return
-        }
 
-        // addSnapshotListener: Notifica o Fragment sempre que houver mudanças no Firestore
+    @SuppressLint("NotifyDataSetChanged")
+    private fun startRealtimeCartListener() {
+        val cartRef = getCartRef() ?: return
+
         firestoreListener = cartRef.addSnapshotListener { snapshot, e ->
             if (e != null) {
-                android.util.Log.e("Carrinho", "Erro ao ouvir o carrinho: $e")
+                Log.e("Carrinho", "Erro ao ouvir carrinho", e)
                 return@addSnapshotListener
             }
 
-            // Garante que a lista local seja atualizada com o estado exato do Firestore
-            listaItens.clear()
-
-            if (snapshot != null && !snapshot.isEmpty) {
-                // Converte os documentos do Firestore para a lista de objetos ItemCarrinho
-                val novosItens = snapshot.documents.mapNotNull {
-                    it.toObject(ItemCarrinho::class.java)
-                }
+            if (snapshot != null) {
+                listaItens.clear()
+                val novosItens = snapshot.documents.mapNotNull { it.toObject(ItemCarrinho::class.java) }
                 listaItens.addAll(novosItens)
-            }
 
-            // Notifica a RecyclerView e recalcula o total
-            carrinhoAdapter.notifyDataSetChanged()
-            onTotalChanged(calcularTotal(), listaItens.size)
+                carrinhoAdapter.notifyDataSetChanged()
+                onTotalChanged(calcularTotal(), listaItens.size)
+            }
         }
     }
 
-    fun saveOrUpdateCartItem(item: ItemCarrinho) {
-        val cartRef = getCartRef() ?: return // Sai se o usuário não estiver logado
-
-        // Usa o produtoId como ID do documento
-        cartRef.document(item.produtoId).set(item)
-            .addOnFailureListener { e ->
-                android.util.Log.e("Carrinho", "Falha ao salvar item: ${e.message}")
-            }
-        // Não é necessário onSuccess, pois o Listener (acima) cuida da atualização da UI.
-    }
-
-    private fun removeCartItem(produtoId: String) {
-        val cartRef = getCartRef() ?: return
-
-        cartRef.document(produtoId).delete()
-            .addOnFailureListener { e ->
-                android.util.Log.e("Carrinho", "Falha ao remover item: ${e.message}")
-            }
-        // O Listener em tempo real atualizará a UI automaticamente após a exclusão.
-    }
-
-    // Chamado pelo Adapter quando a quantidade de um item muda
+    // Chamado quando clica no botão (+)
     override fun onUpdateItem(item: ItemCarrinho) {
-        // Envia o item completo atualizado para ser salvo no Firestore
         saveOrUpdateCartItem(item)
     }
 
-    // Chamado pelo Adapter quando o botão de lixo (ou subtração de item=1) é clicado
+    // Chamado quando clica no lixo ou (-) chega a zero
     override fun onRemoverItem(position: Int) {
-        // 1. Obtém o ID do item a ser removido da lista local (que está sincronizada)
         val itemToRemove = listaItens.getOrNull(position) ?: return
-
-        // 2. Remove do Firestore
         removeCartItem(itemToRemove.produtoId)
-
-        // A remoção visual da lista local será feita pelo Listener
     }
+
+    private fun saveOrUpdateCartItem(item: ItemCarrinho) {
+        getCartRef()?.document(item.produtoId)?.set(item)
+            ?.addOnFailureListener { Log.e("Carrinho", "Erro update: $it") }
+    }
+
+    private fun removeCartItem(produtoId: String) {
+        getCartRef()?.document(produtoId)?.delete()
+            ?.addOnFailureListener { Log.e("Carrinho", "Erro delete: $it") }
+    }
+
     fun onTotalChanged(novoTotal: Double, totalItens: Int) {
-
-        // 1. Configuração do formatador de moeda (Exemplo: Real Brasileiro)
         val formatador = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-
-        // 2. ATUALIZAÇÃO DO TOTAL USANDO BINDING
-        // Acessa as TextViews diretamente pelo objeto 'binding'
         binding.total.text = formatador.format(novoTotal)
-
-        // 3. ATUALIZAÇÃO DA CONTAGEM DE ITENS USANDO BINDING
         binding.totalTitle.text = "Total ($totalItens)"
     }
 
-    // Função para calcular o total
     private fun calcularTotal(): Double {
         return listaItens.sumOf { it.preco * it.quantidade }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Para de ouvir o banco quando sair da tela para economizar dados
+        firestoreListener?.remove()
         (activity as? AppCompatActivity)?.setSupportActionBar(null)
         _binding = null
     }

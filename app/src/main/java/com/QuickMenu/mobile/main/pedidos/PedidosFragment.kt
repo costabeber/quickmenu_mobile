@@ -30,16 +30,16 @@ class PedidosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val produtos1 = listOf(
-            Produto("Açaí Grande", 1, R.drawable.produto_default),
-            Produto("Granola", 2, R.drawable.produto_default)
+        val produtos1s = listOf(
+            ProdutoPedido("Açaí Grande", 1, R.drawable.produto_default),
+            ProdutoPedido("Granola", 2, R.drawable.produto_default)
         )
         val produtos2 = listOf(
-            Produto("Hambúrguer", 1, R.drawable.produto_default)
+            ProdutoPedido("Hambúrguer", 1, R.drawable.produto_default)
         )
 
         val pedidos = listOf(
-            Pedido("1", "Restaurante A", produtos1, Status.Ativo, "12:00"),
+            Pedido("1", "Restaurante A", produtos1s, Status.Ativo, "12:00"),
             Pedido("2", "Restaurante B", produtos2, Status.Ativo,"15:00")
         )
 
