@@ -35,7 +35,7 @@ class PedidosAdapter(
             }
 
             // Atualiza o adapter sempre com os produtos do pedido atual
-            recyclerProdutos.adapter = ProdutosAdapter(pedido.produtos)
+            recyclerProdutos.adapter = ProdutosAdapter(pedido.produtoPedidos)
         }
     }
 
