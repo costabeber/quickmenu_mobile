@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.QuickMenu.mobile.R
@@ -18,6 +19,7 @@ import com.QuickMenu.mobile.databinding.FragmentLoginBinding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginFragment : Fragment() {
 
@@ -38,18 +40,14 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         initListeners()
 
-
         linkCadastro()
-
-
     }
 
     private fun initListeners(){
         binding.btnEntrar.setOnClickListener {
-
+            validateData()
         }
     }
     private fun validateData(){
@@ -58,16 +56,43 @@ class LoginFragment : Fragment() {
         val senha = binding.etSenha.text.toString().trim()
 
         if (email.isEmpty() || senha.isEmpty()) {
-            Toast.makeText(requireContext(), "Preencha todos os campos", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(requireContext(), "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
 
-            (requireActivity() as AuthActivity).navigateToMain()
+            Toast.makeText(requireContext(),
+                "Preencha todos os campos",
+                Toast.LENGTH_SHORT).show()
+        } else {
+
+            binding.progressBar.isVisible = true
+            login(email,senha)
+
         }
     }
 
-    private fun login(){
+    private fun login(email: String, senha: String){
+        try {
+            auth = Firebase.auth
 
+            auth.signInWithEmailAndPassword(email, senha)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful){
+                        Toast.makeText(requireContext(), "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
+
+                        (requireActivity() as AuthActivity).navigateToMain()
+                    }
+                    else{
+                        Toast.makeText(requireContext(),
+                            task.exception.toString(),
+                            Toast.LENGTH_SHORT).show()
+                        binding.progressBar.isVisible = false
+                    }
+                }
+        }
+
+        catch (erro : Exception){
+            Toast.makeText(requireContext(),
+                erro.message,
+                Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun linkCadastro(){
