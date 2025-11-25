@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".main.MainActivity">
 
     <EditText
         android:id="@+id/search_bar"
@@ -42,7 +42,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Favoritos" />
+            android:text="Favoritos"
+            android:textColor="#000000"/>
 
         <Button
             android:id="@+id/btn_promocoes"
@@ -50,7 +51,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Promoções" />
+            android:text="Promoções"
+            android:textColor="#000000"/>
 
         <Button
             android:id="@+id/btn_tendencias"
@@ -58,7 +60,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Tendências" />
+            android:text="Tendências"
+            android:textColor="#000000"/>
     </LinearLayout>
 
     <TextView
@@ -169,8 +172,6 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_bar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/recent_items_scroll">
@@ -209,12 +210,16 @@
                         android:layout_height="wrap_content"
                         android:text="Sweet Cake"
                         android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:textColor="#757575"
+                        />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Doceria" />
+                        android:text="Doceria"
+
+                        />
                 </LinearLayout>
             </LinearLayout>
 
@@ -303,53 +308,5 @@
 
         </LinearLayout>
     </ScrollView>
-
-    <LinearLayout
-        android:id="@+id/bottom_navigation_bar"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:background="#FFC107"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <ImageButton
-            android:id="@+id/btn_home"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_home"
-            tools:ignore="ContentDescription" />
-
-        <ImageButton
-            android:id="@+id/btn_cart"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_cart"
-            tools:ignore="ContentDescription" />
-
-        <ImageButton
-            android:id="@+id/btn_notifications"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_notifications"
-            tools:ignore="ContentDescription" />
-
-        <ImageButton
-            android:id="@+id/btn_profile"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_profile"
-            tools:ignore="ContentDescription" />
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
