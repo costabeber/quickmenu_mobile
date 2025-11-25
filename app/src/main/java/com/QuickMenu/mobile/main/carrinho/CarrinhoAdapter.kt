@@ -82,7 +82,13 @@ class CarrinhoAdapter (private val itens: MutableList<ItemCarrinho>,
 
     // Retorna a quantidade total de itens na lista
     override fun getItemCount(): Int {
-        return itens.size
+        var total = 0
+
+        for (item in itens){
+            total += item.quantidade
+        }
+
+        return total
     }
 
     fun removerItem(position: Int) {

@@ -1,60 +1,139 @@
-package com.QuickMenu.mobile.main.home
+package com.QuickMenu.mobile.main.home.HomeFragment
 
+import ItemProdutoAdapter
+import ItemRestauranteAdapter
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.doOnTextChanged
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.QuickMenu.mobile.R
+import com.QuickMenu.mobile.databinding.FragmentHomeBinding
+import ItemProduto
+import com.QuickMenu.mobile.main.home.ItemRestaurante
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [HomeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class HomeFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
+    private lateinit var recentAdapter: ItemProdutoAdapter
+    private lateinit var restaurantAdapter: ItemRestauranteAdapter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    // --- DADOS INICIAIS (Nomes ajustados nas Data Classes) ---
+    // Simulação: A lista de restaurantes é mutável para permitir a filtragem
+    private val allRestaurants = mutableListOf<ItemRestaurante>(
+        ItemRestaurante("Sweet Cake", "Doceria", R.drawable.sweetcake),
+        ItemRestaurante("Cigarrete burguer", "Hamburgueria", R.drawable.burger),
+    )
+    // Simulação: Itens recentes
+    private val recentItems = listOf(
+        ItemProduto("R$ 8,00", R.drawable.pao),
+        ItemProduto("R$ 30,00", R.drawable.pao),
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false)
+    ): View {
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment HomeFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            HomeFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupRecentItems()
+        setupRestaurantList()
+        setupSearchBar()
+        setupFilterButtons()
+    }
+
+    // --- SETUP DO CARROSSEL HORIZONTAL (Produtos Recentes) ---
+    private fun setupRecentItems() {
+        // Inicializa o ItemProdutoAdapter
+        recentAdapter = ItemProdutoAdapter(recentItems)
+        binding.recyclerItemProduto.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            adapter = recentAdapter
+        }
+    }
+
+    // --- SETUP DA LISTA VERTICAL (Restaurantes) ---
+    private fun setupRestaurantList() {
+        // Inicializa o ItemRestauranteAdapter
+        restaurantAdapter = ItemRestauranteAdapter(allRestaurants)
+        binding.recyclerRestaurantList.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            adapter = restaurantAdapter
+            // isNestedScrollingEnabled = false // Mantido para melhor rolagem se necessário
+        }
+    }
+
+    // --- LÓGICA DE PESQUISA (Search Bar) ---
+    private fun setupSearchBar() {
+        binding.searchBar.doOnTextChanged { text, _, _, _ ->
+            val query = text.toString()
+            filterRestaurants(query)
+            filterRecentItems(query)
+        }
+
+        // Lógica de ação do teclado (clique no botão 'Buscar' do teclado)
+        binding.searchBar.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                // Você pode adicionar aqui uma lógica de pesquisa mais pesada (ex: chamada de API)
+                filterRestaurants(binding.searchBar.text.toString())
+                return@setOnEditorActionListener true
             }
+            false
+        }
+    }
+
+    // --- FILTRO DE RESTAURANTES ---
+    private fun filterRestaurants(query: String) {
+        val filteredList = if (query.isEmpty()) {
+            allRestaurants
+        } else {
+            // Filtra se o nome OU o tipo contêm o texto da busca (ignorando caixa)
+            allRestaurants.filter {
+                it.name.contains(query, ignoreCase = true) || it.type.contains(query, ignoreCase = true)
+            }
+        }
+        // Atualiza a lista exibida no RecyclerView
+        restaurantAdapter.updateList(filteredList)
+    }
+
+    // --- FILTRO DE ITENS RECENTES (Implementação Simples) ---
+    private fun filterRecentItems(query: String) {
+        // Se a pesquisa for muito genérica, você pode querer exibir uma lista diferente.
+        val filteredList = if (query.isEmpty()) {
+            recentItems
+        } else {
+            // Exemplo: filtrar itens recentes por preço.
+            recentItems.filter {
+                it.price.contains(query, ignoreCase = true)
+            }
+        }
+        recentAdapter.updateList(filteredList)
+    }
+
+    // --- CONFIGURAÇÃO DOS BOTÕES DE FILTRO ---
+    private fun setupFilterButtons() {
+        binding.btnFavoritos.setOnClickListener {
+            // TODO: Implementar lógica de filtragem para "Favoritos"
+            // filterRestaurantsByCategory("Favoritos")
+        }
+        binding.btnPromocoes.setOnClickListener {
+            // TODO: Implementar lógica de filtragem para "Promoções"
+        }
+        binding.btnTendencias.setOnClickListener {
+            // TODO: Implementar lógica de filtragem para "Tendências"
+        }
+    }
+
+    // --- LIMPEZA DE BINDING ---
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null // Evita vazamento de memória
     }
 }
