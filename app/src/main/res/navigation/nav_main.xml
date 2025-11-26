@@ -20,14 +20,16 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.QuickMenu.mobile.main.home.HomeFragment"
+        android:name="com.QuickMenu.mobile.main.cardapio.CardapioFragment"
         android:label="Cardápio"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_cardapio" />
 
     <fragment
         android:id="@+id/pedidosFragment"
         android:name="com.QuickMenu.mobile.main.pedidos.PedidosFragment"
         android:label="Notificações"
         tools:layout="@layout/fragment_pedidos" />
+
+
 
 </navigation>
