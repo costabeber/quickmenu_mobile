@@ -10,7 +10,7 @@ data class ItemRestaurante(
     val imageResId: Int
 )
 
-class ItemRestauranteAdapter(private var restaurants: List<ItemRestaurante>) :
+class ItemRestauranteAdapter(private var restaurants: MutableList<ItemRestaurante>) :
     RecyclerView.Adapter<ItemRestauranteAdapter.ItemRestauranteViewHolder>() {
 
     // 1. ViewHolder: Agora armazena a instância do Binding
@@ -44,7 +44,7 @@ class ItemRestauranteAdapter(private var restaurants: List<ItemRestaurante>) :
     // 4. getItemCount: Retorna o número total de itens.
     override fun getItemCount() = restaurants.size
 
-    fun updateList(newRestaurants: List<ItemRestaurante>) {
+    fun updateList(newRestaurants: MutableList<ItemRestaurante>) {
         restaurants = newRestaurants
         notifyDataSetChanged()
     }

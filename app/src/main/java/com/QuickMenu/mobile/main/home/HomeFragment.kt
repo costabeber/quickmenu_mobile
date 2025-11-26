@@ -1,4 +1,4 @@
-package com.QuickMenu.mobile.main.home.HomeFragment
+package com.QuickMenu.mobile.main.home
 
 import ItemProdutoAdapter
 import ItemRestauranteAdapter
@@ -11,8 +11,8 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.QuickMenu.mobile.R
 import com.QuickMenu.mobile.databinding.FragmentHomeBinding
-import ItemProduto
-import com.QuickMenu.mobile.main.home.ItemRestaurante
+import ItemRestaurante
+import com.QuickMenu.mobile.main.home.ItemProduto
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -27,7 +27,7 @@ class HomeFragment : Fragment() {
         ItemRestaurante("Cigarrete burguer", "Hamburgueria", R.drawable.burger),
     )
     // Simulação: Itens recentes
-    private val recentItems = listOf(
+    private val recentItems = mutableListOf(
         ItemProduto("R$ 8,00", R.drawable.pao),
         ItemProduto("R$ 30,00", R.drawable.pao),
     )
@@ -100,7 +100,7 @@ class HomeFragment : Fragment() {
             }
         }
         // Atualiza a lista exibida no RecyclerView
-        restaurantAdapter.updateList(filteredList)
+        restaurantAdapter.updateList(filteredList.toMutableList())
     }
 
     // --- FILTRO DE ITENS RECENTES (Implementação Simples) ---
@@ -114,7 +114,7 @@ class HomeFragment : Fragment() {
                 it.price.contains(query, ignoreCase = true)
             }
         }
-        recentAdapter.updateList(filteredList)
+        recentAdapter.updateList(filteredList.toMutableList())
     }
 
     // --- CONFIGURAÇÃO DOS BOTÕES DE FILTRO ---
