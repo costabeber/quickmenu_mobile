@@ -1,20 +1,22 @@
 package com.QuickMenu.mobile.main.home
 
 import ItemProdutoAdapter
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.QuickMenu.mobile.R
 import com.QuickMenu.mobile.databinding.FragmentHomeBinding
+import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
-import com.google.firebase.Firebase
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -23,7 +25,11 @@ class HomeFragment : Fragment() {
     private lateinit var restaurantAdapter: ItemRestauranteAdapter
     private lateinit var db: FirebaseFirestore
 
+    private var isFilteredByFavorites = false
+
     private var allRestaurants = mutableListOf<ItemRestaurante>()
+    private var lastSearchedRestaurants = mutableListOf<ItemRestaurante>()
+    private var favoriteRestaurants = mutableSetOf<String>() // Armazena os IDs dos favoritos
 
     // Simulação: Itens recentes
     private val recentItems = mutableListOf(
@@ -43,45 +49,76 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         db = Firebase.firestore
 
+        loadFavorites() // Carrega os favoritos salvos
         setupRecentItems()
         setupRestaurantList()
         loadRestaurantsFromFirestore()
         setupSearchBar()
         setupFilterButtons()
+
+        val backPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Verifica se o filtro de favoritos está ativo
+                if (isFilteredByFavorites) {
+                    // Se estiver, desativa o filtro e volta para a lista principal
+                    isFilteredByFavorites = false
+                    filterAndDisplayRestaurants("")
+
+                    // Mostra uma mensagem opcional para o usuário
+                    Toast.makeText(context, "Exibindo todos os restaurantes", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Se não estiver, executa a ação padrão do botão voltar (ex: sair do app)
+                    // Para isso, desabilitamos temporariamente nosso callback e chamamos o back de novo
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true // Reabilita para futuras interceptações
+                }
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressedCallback)
     }
 
+    // --- CARREGAMENTO DE DADOS ---
+
     private fun loadRestaurantsFromFirestore() {
-        // Usamos collectionGroup para buscar em todas as subcoleções "restaurantes"
         db.collectionGroup("restaurantes").get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
-                    Log.d("HomeFragment", "Nenhum restaurante encontrado com collectionGroup.")
-                    // Opcional: mostrar uma mensagem para o usuário
+                    Log.d("HomeFragment", "Nenhum restaurante encontrado.")
                     return@addOnSuccessListener
                 }
                 allRestaurants.clear()
                 for (document in result) {
-                    Log.d("HomeFragment", "Restaurante encontrado: ${document.id}")
-
-                    // Você pode voltar a usar toObject se a sua data class estiver correta.
-                    // Isso é mais limpo e menos propenso a erros.
-                    val restaurante = document.toObject(ItemRestaurante::class.java)
+                    val restaurante = document.toObject(ItemRestaurante::class.java).copy(id = document.id)
                     allRestaurants.add(restaurante)
                 }
-                restaurantAdapter.updateList(allRestaurants)
+                // Exibe a lista completa inicialmente
+                filterAndDisplayRestaurants("")
+                Log.d("HomeFragment", "${allRestaurants.size} restaurantes carregados.")
             }
             .addOnFailureListener { exception ->
-                // Se a query falhar, procure a URL para criar o índice no log de erro!
-                Log.w("HomeFragment", "Erro ao buscar grupo de coleção 'restaurantes'.", exception)
-                Toast.makeText(context, "Erro ao carregar restaurantes. Verifique o log.", Toast.LENGTH_LONG).show()
+                Log.w("HomeFragment", "Erro ao buscar restaurantes.", exception)
+                Toast.makeText(context, "Erro ao carregar restaurantes.", Toast.LENGTH_LONG).show()
             }
     }
 
+    private fun loadFavorites() {
+        val prefs = activity?.getSharedPreferences("RestaurantFavorites", Context.MODE_PRIVATE) ?: return
+        favoriteRestaurants = prefs.getStringSet("favorite_ids", emptySet())?.toMutableSet() ?: mutableSetOf()
+    }
+
+    private fun saveFavorites() {
+        val prefs = activity?.getSharedPreferences("RestaurantFavorites", Context.MODE_PRIVATE) ?: return
+        with(prefs.edit()) {
+            putStringSet("favorite_ids", favoriteRestaurants)
+            apply()
+        }
+    }
 
 
-    // --- SETUP DO CARROSSEL HORIZONTAL (Produtos Recentes) ---
+    // --- SETUP DOS COMPONENTES DA UI ---
+
     private fun setupRecentItems() {
-        // Inicializa o ItemProdutoAdapter
         recentAdapter = ItemProdutoAdapter(recentItems)
         binding.recyclerItemProduto.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
@@ -89,74 +126,124 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // --- SETUP DA LISTA VERTICAL (Restaurantes) ---
     private fun setupRestaurantList() {
-        // Inicializa o ItemRestauranteAdapter com a lista vazia
-        restaurantAdapter = ItemRestauranteAdapter(mutableListOf())
+        // Inicializa o adapter e define os callbacks de clique
+        restaurantAdapter = ItemRestauranteAdapter(mutableListOf(),
+            onFavoriteClick = { restaurante: ItemRestaurante ->
+                toggleFavorite(restaurante)
+            },
+            onItemClick = { restaurante ->
+                // Adiciona o restaurante clicado à lista de "últimos pesquisados"
+                updateLastSearched(restaurante)
+                // TODO: Navegar para a tela de detalhes do restaurante
+                Toast.makeText(context, "Clicou em: ${restaurante.nome}", Toast.LENGTH_SHORT).show()
+            }
+        )
+
         binding.recyclerRestaurantList.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
             adapter = restaurantAdapter
         }
     }
 
-    // --- LÓGICA DE PESQUISA (Search Bar) ---
     private fun setupSearchBar() {
         binding.searchBar.doOnTextChanged { text, _, _, _ ->
-            val query = text.toString()
-            filterRestaurants(query)
-            filterRecentItems(query)
-        }
-
-        // Lógica de ação do teclado (clique no botão 'Buscar' do teclado)
-        binding.searchBar.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
-                filterRestaurants(binding.searchBar.text.toString())
-                return@setOnEditorActionListener true
-            }
-            false
+            val query = text.toString().trim()
+            filterAndDisplayRestaurants(query)
         }
     }
 
-    // --- FILTRO DE RESTAURANTES ---
-    private fun filterRestaurants(query: String) {
+    // --- LÓGICA DE FILTRO E EXIBIÇÃO ---
+
+    private fun filterAndDisplayRestaurants(query: String) {
         val filteredList = if (query.isEmpty()) {
-            allRestaurants
+            // Se a busca está vazia, mostra os últimos pesquisados e depois o resto
+            (lastSearchedRestaurants + allRestaurants).distinctBy { it.id }
         } else {
+            // Filtra a lista completa com base na query
             allRestaurants.filter {
-                it.nome.contains(query, ignoreCase = true) || it.descricao.contains(query, ignoreCase = true)
+                it.nome.contains(query, ignoreCase = true)
+                        //|| it.descricao.contains(query, ignoreCase = true)
             }
         }
-        restaurantAdapter.updateList(filteredList.toMutableList())
+
+        // 2. Agora, ORDENAMOS a lista filtrada.
+        // O método 'sortedByDescending' cria uma nova lista ordenada.
+        // A condição 'favoriteRestaurants.contains(it.id)' retorna 'true' para favoritos e 'false' para não favoritos.
+        // Em Kotlin, 'true' é considerado "maior" que 'false', então 'sortedByDescending'
+        // coloca todos os itens que resultam em 'true' (os favoritos) no início.
+        val sortedList = filteredList.sortedByDescending { favoriteRestaurants.contains(it.id) }
+
+        // 3. Finalmente, enviamos a lista já filtrada E ordenada para o adapter.
+        restaurantAdapter.updateList(sortedList, favoriteRestaurants)
     }
 
-    // --- FILTRO DE ITENS RECENTES (Implementação Simples) ---
     private fun filterRecentItems(query: String) {
         val filteredList = if (query.isEmpty()) {
             recentItems
         } else {
-            recentItems.filter {
-                it.price.contains(query, ignoreCase = true)
-            }
+            recentItems.filter { it.price.contains(query, ignoreCase = true) }
         }
         recentAdapter.updateList(filteredList.toMutableList())
     }
-
-    // --- CONFIGURAÇÃO DOS BOTÕES DE FILTRO ---
     private fun setupFilterButtons() {
         binding.btnFavoritos.setOnClickListener {
-            // TODO: Implementar lógica de filtragem para "Favoritos"
+            isFilteredByFavorites = true
+            val favoritedList = allRestaurants.filter { favoriteRestaurants.contains(it.id) }
+            // Ao filtrar por favoritos, todos na lista são favoritos.
+            restaurantAdapter.updateList(favoritedList, favoriteRestaurants)
         }
+
         binding.btnPromocoes.setOnClickListener {
-            // TODO: Implementar lógica de filtragem para "Promoções"
+            // TODO: Lógica para promoções
         }
         binding.btnTendencias.setOnClickListener {
-            // TODO: Implementar lógica de filtragem para "Tendências"
+            // TODO: Lógica para tendências
+        }
+        binding.root.setOnClickListener { // Renomeado de root para um botão mais claro
+            // Ao redefinir, mostramos a lista inicial completa
+            filterAndDisplayRestaurants("")
         }
     }
 
-    // --- LIMPEZA DE BINDING ---
+
+
+
+    // --- LÓGICA DE NEGÓCIO ---
+
+    private fun toggleFavorite(restaurante: ItemRestaurante) {
+        val isCurrentlyFavorite = favoriteRestaurants.contains(restaurante.id)
+        if (isCurrentlyFavorite) {
+            favoriteRestaurants.remove(restaurante.id)
+            Log.d("HomeFragment", "${restaurante.nome} removido dos favoritos.")
+        } else {
+            favoriteRestaurants.add(restaurante.id)
+            Log.d("HomeFragment", "${restaurante.nome} adicionado aos favoritos.")
+        }
+        saveFavorites()
+
+        // Pega a query atual da barra de busca para refiltrar a lista com o novo estado de favorito
+        val currentQuery = binding.searchBar.text.toString().trim()
+        filterAndDisplayRestaurants(currentQuery)
+    }
+
+
+
+    private fun updateLastSearched(restaurante: ItemRestaurante) {
+        // Remove se já existe para movê-lo para o topo
+        lastSearchedRestaurants.removeIf { it.id == restaurante.id }
+        // Adiciona no início da lista
+        lastSearchedRestaurants.add(0, restaurante)
+        // Mantém apenas os 2 últimos
+        if (lastSearchedRestaurants.size > 2) {
+            lastSearchedRestaurants = lastSearchedRestaurants.subList(0, 2)
+        }
+        Log.d("HomeFragment", "Últimos pesquisados: ${lastSearchedRestaurants.map { it.nome }}")
+    }
+
+
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Evita vazamento de memória
+        _binding = null
     }
 }
