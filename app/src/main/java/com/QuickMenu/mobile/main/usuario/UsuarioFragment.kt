@@ -1,6 +1,7 @@
 package com.QuickMenu.mobile.main.usuario
 
 import android.app.AlertDialog
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.QuickMenu.mobile.databinding.FragmentUsuarioBinding
 import com.QuickMenu.mobile.main.MainActivity
+import com.QuickMenu.mobile.main.home.ItemRestaurante
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.firebase.Firebase
@@ -37,6 +39,12 @@ class UsuarioFragment : Fragment() {
     private lateinit var banco: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
 
+    // Variáveis para a lógica dos restaurantes
+    private var allRestaurants = mutableListOf<ItemRestaurante>()
+    private var favoriteRestaurantIds = setOf<String>()
+    private var lastSelectedRestaurantIds = listOf<String>()
+
+
     // Variável para guardar a URL atual para visualização
     private var currentPhotoUrl: String? = null
 
@@ -59,6 +67,7 @@ class UsuarioFragment : Fragment() {
 
         initListener()
         loadUserData()
+        loadAndDisplayPriorityRestaurants()
     }
 
     private fun initListener() {
@@ -248,6 +257,99 @@ class UsuarioFragment : Fragment() {
         parentFragmentManager.popBackStack()
         (requireActivity() as MainActivity).navigateToAuth()
     }
+
+    private fun loadAndDisplayPriorityRestaurants() {
+        // Carrega as preferências do usuário (favoritos e últimos vistos)
+        loadUserPreferences()
+
+        // Busca todos os restaurantes no Firestore
+        banco.collectionGroup("restaurantes").get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) return@addOnSuccessListener
+
+                allRestaurants.clear()
+                for (document in result) {
+                    val restaurante = document.toObject(ItemRestaurante::class.java).copy(id = document.id)
+                    allRestaurants.add(restaurante)
+                }
+
+                // Após carregar tudo, aplica a lógica de ordenação e exibe as imagens
+                displayPriorityRestaurants()
+            }
+            .addOnFailureListener {
+                // Lida com o erro, se necessário
+            }
+    }
+
+    private fun loadUserPreferences() {
+        val prefs = activity?.getSharedPreferences("RestaurantPreferences", Context.MODE_PRIVATE) ?: return
+        favoriteRestaurantIds = prefs.getStringSet("favorite_ids", emptySet()) ?: emptySet()
+        // Supondo que você salve os últimos selecionados como uma string de IDs separados por vírgula
+        lastSelectedRestaurantIds = prefs.getString("last_selected_ids", "")?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+    }
+
+    private fun displayPriorityRestaurants() {
+        // 1. Calcula a pontuação para cada restaurante usando a HIERARQUIA CORRETA
+        val scoredRestaurants = allRestaurants.map { restaurant ->
+            val isFavorite = favoriteRestaurantIds.contains(restaurant.id)
+            val lastSelectedIndex = lastSelectedRestaurantIds.indexOf(restaurant.id)
+            val isLastSelected = lastSelectedIndex != -1
+
+            var score = 0
+            if (isFavorite) {
+                // REGRA 1: SE É FAVORITO, A PONTUAÇÃO BASE É ALTA (ex: 1000)
+                score = 1000
+
+                if (isLastSelected) {
+                    // BÔNUS: Se também for recente, ganha um bônus para desempate.
+                    // Quanto mais recente (menor o índice), maior o bônus.
+                    score += (100 - lastSelectedIndex) // Ex: 1100, 1099, 1098...
+                }
+            } else if (isLastSelected) {
+                // REGRA 2: SE NÃO É FAVORITO, MAS É RECENTE, A PONTUAÇÃO BASE É BEM MENOR (ex: 100)
+                score = 100 - lastSelectedIndex // Ex: 100, 99, 98...
+            }
+
+            Pair(restaurant, score) // Retorna o restaurante e sua pontuação final
+        }
+            // 2. Filtra (mantém apenas quem tem pontuação), ordena pela maior pontuação e mapeia de volta
+            .filter { it.second > 0 }
+            .sortedByDescending { it.second }
+            .map { it.first }
+
+        // 3. Pega os 3 melhores (ou menos, se não houver 3)
+        val topRestaurants = scoredRestaurants.take(3)
+
+        // 4. Lista dos ImageViews do seu layout
+        val imageViews = listOf(binding.ivRestaurante1, binding.ivRestaurante2, binding.ivRestaurante3)
+
+        // Limpa o estado anterior, escondendo todas as imagens
+/*        imageViews.forEach {
+            it.visibility = View.INVISIBLE
+            it.setOnClickListener(null) // Remove cliques antigos para evitar bugs
+        }*/
+
+        // 5. Popula os ImageViews com as imagens e define os cliques
+        topRestaurants.forEachIndexed { index, restaurant ->
+            if (index < imageViews.size) {
+                val imageView = imageViews[index]
+                imageView.visibility = View.VISIBLE // Torna a imagem visível
+
+                Glide.with(this)
+                    .load(restaurant.imageUrl)
+                    .placeholder(com.QuickMenu.mobile.R.drawable.default_profile_picture)
+                    .error(com.QuickMenu.mobile.R.drawable.bolo)
+                    .into(imageView)
+
+                // Opcional: Adicionar um clique para levar à tela do restaurante
+                imageView.setOnClickListener {
+                    Toast.makeText(context, "Clicou em ${restaurant.nome}", Toast.LENGTH_SHORT).show()
+                    // TODO: Navegar para a tela de detalhes do 'restaurant'
+                }
+            }
+        }
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

@@ -100,7 +100,7 @@
         <!-- Os Space fazem o espaço entre as imagens no LinearLayout -->
 
         <ImageView
-            android:id="@+id/cantina"
+            android:id="@+id/iv_restaurante_1"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             app:srcCompat="@drawable/cantinasonia" />
@@ -111,7 +111,7 @@
             android:layout_weight="1"></Space>
 
         <ImageView
-            android:id="@+id/burguer"
+            android:id="@+id/iv_restaurante_2"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             app:srcCompat="@drawable/burger" />
@@ -122,7 +122,7 @@
             android:layout_weight="1"></Space>
 
         <ImageView
-            android:id="@+id/sweet"
+            android:id="@+id/iv_restaurante_3"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             app:srcCompat="@drawable/sweetcake" />

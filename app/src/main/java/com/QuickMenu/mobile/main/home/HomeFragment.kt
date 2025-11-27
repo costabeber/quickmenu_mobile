@@ -230,16 +230,33 @@ class HomeFragment : Fragment() {
 
 
     private fun updateLastSearched(restaurante: ItemRestaurante) {
-        // Remove se já existe para movê-lo para o topo
+        // 1. Remove o restaurante da lista se ele já existir, para evitar duplicatas
         lastSearchedRestaurants.removeIf { it.id == restaurante.id }
-        // Adiciona no início da lista
+
+        // 2. Adiciona o restaurante clicado no INÍCIO (posição 0) da lista
         lastSearchedRestaurants.add(0, restaurante)
-        // Mantém apenas os 2 últimos
-        if (lastSearchedRestaurants.size > 2) {
-            lastSearchedRestaurants = lastSearchedRestaurants.subList(0, 2)
+
+        // 3. Garante que a lista não tenha mais de 5 itens (ou o número que preferir).
+        //    Usar .take() é mais seguro e evita o crash, pois cria uma nova lista.
+        if (lastSearchedRestaurants.size > 5) {
+            lastSearchedRestaurants = lastSearchedRestaurants.take(5).toMutableList()
         }
-        Log.d("HomeFragment", "Últimos pesquisados: ${lastSearchedRestaurants.map { it.nome }}")
+
+        // 4. Salva a lista de IDs no SharedPreferences para o UsuarioFragment usar
+        val prefs = activity?.getSharedPreferences("RestaurantPreferences", Context.MODE_PRIVATE) ?: return
+        with(prefs.edit()) {
+            // Pega os IDs, junta em uma string separada por vírgula e salva
+            val idsString = lastSearchedRestaurants.joinToString(separator = ",") { it.id }
+            putString("last_selected_ids", idsString)
+            apply() // Salva as alterações
+        }
+
+        Log.d("HomeFragment", "Últimos pesquisados (salvos): ${lastSearchedRestaurants.map { it.nome }}")
+
+        // 5. Atualiza a exibição na tela do HomeFragment para refletir a nova ordem dos "últimos pesquisados"
+        filterAndDisplayRestaurants(binding.searchBar.text.toString().trim())
     }
+
 
 
     override fun onDestroyView() {
