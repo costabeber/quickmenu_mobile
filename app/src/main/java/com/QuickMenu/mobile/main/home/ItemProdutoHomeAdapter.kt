@@ -1,7 +1,7 @@
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.QuickMenu.mobile.databinding.ItemProdutoBinding // Verifique o nome real do seu pacote e binding!
+import com.QuickMenu.mobile.databinding.ItemProdutoHomeBinding
 import com.QuickMenu.mobile.main.home.ItemProdutoHome
 
 // Data Class (Apenas para referência no Adapter)
@@ -14,12 +14,12 @@ class ItemProdutoHomeAdapter(private var products:  MutableList<ItemProdutoHome>
     RecyclerView.Adapter<ItemProdutoHomeAdapter.ItemProdutoViewHolder>() {
 
     // 1. ViewHolder: Agora armazena a instância do Binding
-    class ItemProdutoViewHolder(val binding: ItemProdutoBinding) :
+    class ItemProdutoViewHolder(val binding: ItemProdutoHomeBinding) :
         RecyclerView.ViewHolder(binding.root) // O 'root' é a View principal do item
 
     // 2. onCreateViewHolder: Infla o layout usando o Binding.
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemProdutoViewHolder {
-        val binding = ItemProdutoBinding.inflate(
+        val binding = ItemProdutoHomeBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false
