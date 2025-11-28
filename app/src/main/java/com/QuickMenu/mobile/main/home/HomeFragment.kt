@@ -1,6 +1,6 @@
 package com.QuickMenu.mobile.main.home
 
-import ItemProdutoAdapter
+import ItemProdutoHomeAdapter
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -21,7 +21,7 @@ import com.google.firebase.firestore.firestore
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private lateinit var recentAdapter: ItemProdutoAdapter
+    private lateinit var recentAdapter: ItemProdutoHomeAdapter
     private lateinit var restaurantAdapter: ItemRestauranteAdapter
     private lateinit var db: FirebaseFirestore
 
@@ -33,8 +33,8 @@ class HomeFragment : Fragment() {
 
     // Simulação: Itens recentes
     private val recentItems = mutableListOf(
-        ItemProduto("R$ 8,00", R.drawable.pao),
-        ItemProduto("R$ 30,00", R.drawable.pao),
+        ItemProdutoHome("R$ 8,00", R.drawable.pao),
+        ItemProdutoHome("R$ 30,00", R.drawable.pao),
     )
 
     override fun onCreateView(
@@ -122,7 +122,7 @@ class HomeFragment : Fragment() {
     // --- SETUP DOS COMPONENTES DA UI ---
 
     private fun setupRecentItems() {
-        recentAdapter = ItemProdutoAdapter(recentItems)
+        recentAdapter = ItemProdutoHomeAdapter(recentItems)
         binding.recyclerItemProduto.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = recentAdapter
