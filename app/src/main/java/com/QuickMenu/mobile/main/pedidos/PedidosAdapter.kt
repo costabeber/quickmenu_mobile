@@ -5,6 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.QuickMenu.mobile.databinding.ItemPedidoBinding
+import java.text.NumberFormat
+import java.util.Locale
 
 class PedidosAdapter(
     private val pedidos: List<Pedido>
@@ -14,9 +16,7 @@ class PedidosAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PedidoViewHolder {
         val binding = ItemPedidoBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
+            LayoutInflater.from(parent.context), parent, false
         )
         return PedidoViewHolder(binding)
     }
@@ -24,17 +24,20 @@ class PedidosAdapter(
     override fun onBindViewHolder(holder: PedidoViewHolder, position: Int) {
         val pedido = pedidos[position]
         with(holder.binding) {
-            restaurante.text = pedido.restaurante
-            textTime.text = pedido.horario
+            // Se o ID do restaurante estiver vazio, colocamos um texto padrão
+            restaurante.text = if(pedido.restauranteId.isEmpty()) "Restaurante Teste" else pedido.restauranteId
 
-            // Só configura o RecyclerView uma vez
+            textTime.text = pedido.horarioFormatado
+
+            // Opcional: Mostrar o total do pedido em algum lugar do card se tiver o TextView
+            // val formatador = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+            // txtTotal.text = formatador.format(pedido.precoTotal)
+
             if (recyclerProdutos.layoutManager == null) {
                 recyclerProdutos.layoutManager = LinearLayoutManager(root.context)
                 recyclerProdutos.setHasFixedSize(true)
                 recyclerProdutos.isNestedScrollingEnabled = false
             }
-
-            // Atualiza o adapter sempre com os produtos do pedido atual
             recyclerProdutos.adapter = ProdutosAdapter(pedido.produtoPedidos)
         }
     }

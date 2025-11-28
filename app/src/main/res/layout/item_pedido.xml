@@ -10,8 +10,10 @@
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        app:cardCornerRadius="15dp"
+
+        app:cardCornerRadius="12dp"
+        app:cardElevation="6dp"
+        app:cardUseCompatPadding="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -39,10 +41,11 @@
                     android:paddingEnd="10dp"
                     android:textSize="16sp"
                     android:textStyle="bold"
+                    android:textColor="@color/cinza_intenso"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/textTime"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:text="Horário agendado:" />
+                    tools:text="Horário :" />
 
                 <TextView
                     android:id="@+id/textTime"
@@ -50,6 +53,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="16sp"
                     android:textStyle="bold"
+                    android:textColor="@color/cinza_intenso"
                     app:layout_constraintStart_toEndOf="@id/textDescription"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
@@ -71,6 +75,7 @@
                     android:layout_height="70dp"
                     android:contentDescription="Logo"
                     android:scaleType="fitCenter"
+                    android:backgroundTint="@color/white"
                     android:src="@drawable/restaurante_default"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/restaurante"
