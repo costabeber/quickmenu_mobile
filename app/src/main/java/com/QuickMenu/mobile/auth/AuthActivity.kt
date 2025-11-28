@@ -13,19 +13,16 @@ class AuthActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
-        // Inflar o layout usando o View Binding
         binding = ActivityAuthBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
     }
 
     fun navigateToMain() {
-        // Lógica de navegação de Activity para Activity
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)
-        finish() // Fecha AuthActivity
+        finish()
     }
 }

@@ -103,17 +103,20 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadFavorites() {
-        val prefs = activity?.getSharedPreferences("RestaurantFavorites", Context.MODE_PRIVATE) ?: return
+        // Usar o nome padrão para consistência
+        val prefs = activity?.getSharedPreferences("RestaurantPreferences", Context.MODE_PRIVATE) ?: return
         favoriteRestaurants = prefs.getStringSet("favorite_ids", emptySet())?.toMutableSet() ?: mutableSetOf()
     }
 
     private fun saveFavorites() {
-        val prefs = activity?.getSharedPreferences("RestaurantFavorites", Context.MODE_PRIVATE) ?: return
+        // Usar o nome padrão para consistência
+        val prefs = activity?.getSharedPreferences("RestaurantPreferences", Context.MODE_PRIVATE) ?: return
         with(prefs.edit()) {
             putStringSet("favorite_ids", favoriteRestaurants)
             apply()
         }
     }
+
 
 
     // --- SETUP DOS COMPONENTES DA UI ---

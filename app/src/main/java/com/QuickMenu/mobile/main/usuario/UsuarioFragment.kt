@@ -38,14 +38,9 @@ class UsuarioFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var banco: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
-
-    // Variáveis para a lógica dos restaurantes
     private var allRestaurants = mutableListOf<ItemRestaurante>()
     private var favoriteRestaurantIds = setOf<String>()
     private var lastSelectedRestaurantIds = listOf<String>()
-
-
-    // Variável para guardar a URL atual para visualização
     private var currentPhotoUrl: String? = null
 
     // Contrato para abrir a galeria
@@ -76,7 +71,76 @@ class UsuarioFragment : Fragment() {
         binding.fotoPerfil.setOnClickListener {
             showOptionsDialog()
         }
+
+        binding.editButton.setOnClickListener {
+            showEditUsernameDialog()
+        }
     }
+
+    // --- FUNÇÃO PARA EDITAR NOME DE USUÁRIO ---
+    private fun showEditUsernameDialog() {
+        // 1. Criar um container para o campo de texto, para podermos adicionar margens
+        val container = android.widget.FrameLayout(requireContext())
+        val params = android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        // Adiciona margens para que o campo de texto não cole nas bordas do pop-up
+        params.leftMargin = 50
+        params.rightMargin = 50
+
+        // 2. Criar o campo de texto (EditText)
+        val editText = android.widget.EditText(requireContext())
+        editText.layoutParams = params
+        // Define o texto inicial como o nome de usuário atual
+        editText.setText(binding.nome.text)
+        // Move o cursor para o final do texto
+        editText.setSelection(binding.nome.text.length)
+
+        // Adiciona o EditText ao container
+        container.addView(editText)
+
+        // 3. Construir e exibir o AlertDialog
+        AlertDialog.Builder(requireContext())
+            .setTitle("Alterar nome de usuário")
+            .setView(container) // Adiciona o container com o EditText
+            .setPositiveButton("Salvar") { dialog, _ ->
+                // Ação para o botão "Salvar"
+                val newUsername = editText.text.toString().trim()
+
+                if (newUsername.isNotEmpty()) {
+                    // Se o nome não estiver vazio, atualiza no banco de dados
+                    updateUsernameInFirestore(newUsername)
+                } else {
+                    Toast.makeText(requireContext(), "O nome não pode ser vazio", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss() // Fecha o pop-up
+            }
+            .setNegativeButton("Cancelar", null) // Botão "Cancelar" não faz nada
+            .show()
+    }
+
+    // --- FUNÇÃO PARA ATUALIZAR O NOME NO BANCO DE DADOS ---
+    private fun updateUsernameInFirestore(newUsername: String) {
+        val uid = auth.currentUser?.uid ?: return // Pega o ID do usuário logado
+
+        // Mostra uma mensagem de "salvando"
+        Toast.makeText(requireContext(), "Salvando...", Toast.LENGTH_SHORT).show()
+
+        banco.collection("Usuario").document(uid)
+            .update("username", newUsername) // Atualiza apenas o campo "username"
+            .addOnSuccessListener {
+                // Sucesso!
+                Toast.makeText(requireContext(), "Nome atualizado com sucesso!", Toast.LENGTH_SHORT).show()
+                // Atualiza o nome na tela imediatamente
+                binding.nome.text = newUsername
+            }
+            .addOnFailureListener { e ->
+                // Falha!
+                Toast.makeText(requireContext(), "Erro ao atualizar o nome: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+    }
+
 
     //POP-UP
     private fun showOptionsDialog() {
