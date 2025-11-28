@@ -177,9 +177,13 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
                 listaItens.addAll(novosItens)
 
                 carrinhoAdapter.notifyDataSetChanged()
-                onTotalChanged(calcularTotal(), listaItens.size)
+                onTotalChanged(calcularTotal(), calcularTotalUnidades())
             }
         }
+    }
+    private fun calcularTotalUnidades(): Int {
+        // Retorna a soma de todas as propriedades 'quantidade' de cada item na lista
+        return listaItens.sumOf { it.quantidade }
     }
 
     // Chamado quando clica no botão (+)

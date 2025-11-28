@@ -25,7 +25,6 @@ class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
-
     private lateinit var auth: FirebaseAuth
 
     override fun onCreateView(
@@ -56,12 +55,11 @@ class LoginFragment : Fragment() {
         val senha = binding.etSenha.text.toString().trim()
 
         if (email.isEmpty() || senha.isEmpty()) {
-
             Toast.makeText(requireContext(),
                 "Preencha todos os campos",
                 Toast.LENGTH_SHORT).show()
-        } else {
 
+        } else {
             binding.progressBar.isVisible = true
             login(email,senha)
 
@@ -72,20 +70,25 @@ class LoginFragment : Fragment() {
         try {
             auth = Firebase.auth
 
-            auth.signInWithEmailAndPassword(email, senha)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful){
-                        Toast.makeText(requireContext(), "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
+            auth.signInWithEmailAndPassword(email, senha).addOnCompleteListener { task ->
 
-                        (requireActivity() as AuthActivity).navigateToMain()
-                    }
-                    else{
-                        Toast.makeText(requireContext(),
-                            task.exception.toString(),
-                            Toast.LENGTH_SHORT).show()
-                        binding.progressBar.isVisible = false
-                    }
+                if (task.isSuccessful){
+                    Toast.makeText(
+                        requireContext(),
+                        "Login realizado com sucesso!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    (requireActivity() as AuthActivity).navigateToMain()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        task.exception.toString(),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    binding.progressBar.isVisible = false
                 }
+            }
         }
 
         catch (erro : Exception){
@@ -98,7 +101,6 @@ class LoginFragment : Fragment() {
     private fun linkCadastro(){
         val fullText = "Preencha com seus dados para realizar o cadastro"
         val spannableString = SpannableString(fullText)
-
 
         val clickableSpan = object : ClickableSpan() {
             override fun onClick(widget: View) {
@@ -115,8 +117,6 @@ class LoginFragment : Fragment() {
         binding.tvCadastro.text = spannableString
         binding.tvCadastro.movementMethod = LinkMovementMethod.getInstance()
     }
-
-
 
     override fun onDestroyView() {
         super.onDestroyView()

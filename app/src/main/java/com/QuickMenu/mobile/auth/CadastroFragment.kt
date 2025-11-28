@@ -18,14 +18,13 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 
-class CadastroFragment : Fragment() { // Herdar de Fragment
+class CadastroFragment : Fragment() {
 
     private var _binding: FragmentCadastroBinding? = null
     private val binding get() = _binding!!
     private lateinit var auth: FirebaseAuth
     private lateinit var banco: FirebaseFirestore
 
-    // 1. Inflar o layout (substitui onCreate e setContentView)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -53,47 +52,42 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
 
     private fun validateData(){
 
-            val nomeUsuario = binding.etNomeUsuario.text.toString().trim()
-            val email = binding.etEmailCadastro.text.toString().trim()
-            val senha = binding.etSenhaCadastro.text.toString().trim()
+        val nomeUsuario = binding.etNomeUsuario.text.toString().trim()
+        val email = binding.etEmailCadastro.text.toString().trim()
+        val senha = binding.etSenhaCadastro.text.toString().trim()
 
-            // NOTA: Em Fragments, use 'requireContext()' ou 'activity' para o Context
-            if (nomeUsuario.isEmpty() || email.isEmpty() || senha.isEmpty()) {
-                Toast.makeText(requireContext(), "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
-                return
+        if (nomeUsuario.isEmpty() || email.isEmpty() || senha.isEmpty()) {
+            Toast.makeText(requireContext(), "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
+            return
 
-            } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                Toast.makeText(requireContext(), "Por favor, insira um e-mail válido.", Toast.LENGTH_SHORT).show()
-                return
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(requireContext(), "Por favor, insira um e-mail válido.", Toast.LENGTH_SHORT).show()
+            return
 
-            } else if (senha.length < 6) {
-                Toast.makeText(requireContext(), "A senha deve ter pelo menos 6 caracteres.", Toast.LENGTH_SHORT).show()
-                return
+        } else if (senha.length < 6) {
+            Toast.makeText(requireContext(), "A senha deve ter pelo menos 6 caracteres.", Toast.LENGTH_SHORT).show()
+            return
 
-            } else {
-                registerUser(email,senha)
-
-            }
+        } else {
+            registerUser(email,senha)
+        }
 
     }
 
     private fun registerUser(email: String, password: String){
         try {
-            auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
+            auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
 
-                    if (task.isSuccessful) {
+                if (task.isSuccessful) {
+                    saveUserData()
+                    findNavController().navigate(R.id.action_cadastroFragment_to_loginFragment)
 
-                        saveUserData()
-                        findNavController().navigate(R.id.action_cadastroFragment_to_loginFragment)
-
-                    } else {
-
-                        binding.progressBar.isVisible = false
-                        Toast.makeText(
-                            requireContext(),
-                            task.exception?.message,
-                            Toast.LENGTH_SHORT,
+                } else {
+                    binding.progressBar.isVisible = false
+                    Toast.makeText(
+                        requireContext(),
+                        task.exception?.message,
+                        Toast.LENGTH_SHORT,
                         ).show()
 
                     }
@@ -105,6 +99,7 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
     }
 
     private fun saveUserData(){
+
         val uid = auth.currentUser?.uid
         val username = binding.etNomeUsuario.text.toString()
 
@@ -119,11 +114,9 @@ class CadastroFragment : Fragment() { // Herdar de Fragment
             .set(userMap) // Cria o documento com os dados iniciais
             .addOnSuccessListener {
                 println("Perfil de usuário salvo com sucesso no Firestore: $uid")
-                // AQUI VOCÊ PODE NAVEGAR PARA A TELA PRINCIPAL
             }
             .addOnFailureListener { e ->
                 println("Falha ao salvar o perfil no Firestore: ${e.message}")
-                // Tratar falha no banco de dados (embora o Auth tenha funcionado)
             }
     }
 
