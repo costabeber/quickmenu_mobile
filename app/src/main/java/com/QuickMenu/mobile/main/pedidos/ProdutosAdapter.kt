@@ -3,8 +3,9 @@ package com.QuickMenu.mobile.main.pedidos
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.QuickMenu.mobile.R // Importe seu R
+import com.QuickMenu.mobile.R
 import com.QuickMenu.mobile.databinding.ItemProdutoPedidoBinding
+import com.bumptech.glide.Glide // 1. Não esqueça de importar o Glide
 
 class ProdutosAdapter(
     private val produtoPedidos: List<ProdutoPedido>
@@ -22,13 +23,23 @@ class ProdutosAdapter(
 
     override fun onBindViewHolder(holder: ProdutoViewHolder, position: Int) {
         val produto = produtoPedidos[position]
+
         with(holder.binding) {
             nomeProduto.text = produto.nome
             quantidadeProduto.text = "${produto.quantidade}x"
 
-            // Como o banco salva URL (String) e não ID (Int), e ainda não temos Glide/Picasso:
-            // Vamos usar a imagem padrão definida no XML ou setar manualmente o placeholder
-            imageProduto.setImageResource(R.drawable.produto_default) // Ou bolo, conforme seu projeto
+            // 2. Lógica do Glide para carregar a imagem do banco
+            if (produto.imageUrl.isNotEmpty()) {
+                Glide.with(root.context)
+                    .load(produto.imageUrl)
+                    .centerCrop()
+                    .placeholder(R.drawable.bolo) // Use sua imagem padrão aqui
+                    .error(R.drawable.bolo)       // Caso a URL quebre
+                    .into(imageProduto)
+            } else {
+                // Se não tiver URL salva, mostra a imagem padrão
+                imageProduto.setImageResource(R.drawable.bolo)
+            }
         }
     }
 

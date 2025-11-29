@@ -1,5 +1,6 @@
 package com.QuickMenu.mobile.main.cardapio
 
+
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,6 +16,8 @@ import com.bumptech.glide.Glide
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+
+
 
 class CardapioFragment : Fragment() {
 
@@ -62,6 +65,18 @@ class CardapioFragment : Fragment() {
             // Como você veio da Home, ele voltará para a Home.
             findNavController().navigateUp()
         }
+        binding.btnVerCarrinho.setOnClickListener {
+            // Certifique-se de criar essa seta no seu navigation graph!
+            // Se o nome da ação for diferente, ajuste abaixo.
+            try {
+                findNavController().navigate(com.QuickMenu.mobile.R.id.carrinhoFragment)
+            } catch (e: Exception) {
+                // Caso não tenha criado a action, tente navegar pelo ID do fragmento (menos recomendado, mas funciona)
+                // findNavController().navigate(com.QuickMenu.mobile.R.id.carrinhoFragment)
+                Toast.makeText(context, "Erro na navegação: Configure o NavGraph", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     }
 
 

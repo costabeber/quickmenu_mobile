@@ -70,7 +70,9 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
             } else {
                 Toast.makeText(context, "Seu carrinho está vazio!", Toast.LENGTH_SHORT).show()
             }
+
         }
+
 
         // Botão de teste para adicionar itens
         binding.btnAddItemTeste.setOnClickListener {

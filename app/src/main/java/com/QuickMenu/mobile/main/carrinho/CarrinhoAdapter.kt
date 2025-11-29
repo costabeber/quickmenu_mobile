@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.QuickMenu.mobile.R
 import com.QuickMenu.mobile.databinding.ItemCarrinhoBinding
+import com.bumptech.glide.Glide
 import kotlin.inc
 import kotlin.toString
 
@@ -19,9 +20,19 @@ class CarrinhoAdapter (private val itens: MutableList<ItemCarrinho>,
             binding.quantidade.text = "${item.quantidade}"
             binding.Preco.text = "R$ ${item.preco}"
 
-            // AQUI: Carrega a imagem de Placeholder
-            // O 'R.drawable.ic_placeholder_produto' é o ID do recurso local
-            binding.imagemProduto.setImageResource(R.drawable.bolo)
+            // AQUI: Carrega a imagem do produto, ou o placeholder
+
+            if (!item.imageUrl.isNullOrEmpty()) {
+                Glide.with(binding.root.context)
+                    .load(item.imageUrl)
+                    .placeholder(R.drawable.bolo) // Mostra o bolo enquanto carrega
+                    .error(R.drawable.bolo)       // Mostra o bolo se der erro na URL
+                    .centerCrop()
+                    .into(binding.imagemProduto)
+            } else {
+                // Se não tiver URL, usa a imagem padrão
+                binding.imagemProduto.setImageResource(R.drawable.bolo)
+            }
 
             // Lógica de clique na imagem do produto
             binding.imagemProduto.setOnClickListener {
