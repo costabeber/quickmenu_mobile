@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.QuickMenu.mobile.databinding.FragmentCardapioBinding
 import com.QuickMenu.mobile.main.carrinho.ItemCarrinho
@@ -23,10 +24,10 @@ class CardapioFragment : Fragment() {
     private val db = Firebase.firestore
     private val auth = Firebase.auth
 
-    // ID do restaurante fixo conforme solicitado
-    private val RESTAURANTE_ID = "81ClpafKYkEvB5HFCCZF"
-    private val USER_UID = "81ClpafKYkEvB5HFCCZF"
-    // Lista principal que alimentará o adapter
+    // Variáveis para guardar os IDs dinâmicos
+    private var currentRestauranteId: String = ""
+    private var currentDonoId: String = ""
+
     private val listaCategoriasCompletas = mutableListOf<Categoria>()
     private lateinit var categoriaAdapter: CategoriaAdapter
 
@@ -41,10 +42,28 @@ class CardapioFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
+        arguments?.let { bundle ->
+            currentRestauranteId = bundle.getString("restauranteId") ?: ""
+            currentDonoId = bundle.getString("donoId") ?: ""
+        }
+
+        if (currentRestauranteId.isEmpty() || currentDonoId.isEmpty()) {
+            Toast.makeText(context, "Erro ao carregar restaurante", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+
         setupRecyclerView()
-        carregarDadosRestaurante()
-        carregarCardapio()
+        carregarDadosRestaurante() // Agora usa as variáveis dinâmicas
+        carregarCardapio()         // Agora usa as variáveis dinâmicas
+        binding.btnVoltar.setOnClickListener {
+            // Isso diz ao NavController para voltar para a tela anterior na pilha.
+            // Como você veio da Home, ele voltará para a Home.
+            findNavController().navigateUp()
+        }
     }
+
 
     private fun setupRecyclerView() {
         // Passamos a função de adicionar ao carrinho para o adapter
@@ -59,16 +78,10 @@ class CardapioFragment : Fragment() {
         }
     }
 
-    // 1. Carrega Banner, Nome e Descrição do Restaurante
     private fun carregarDadosRestaurante() {
-        // ID do usuário/administrador que contém a lista de restaurantes
-        // Vou usar o ID que você forneceu como FIXO
-        val USER_ADMIN_ID = "8UtmPeDZdpRd3RCEHTXwsWlALby2"
-
-        // O caminho completo é: collection("users") -> document(USER_ADMIN_ID) -> collection("restaurantes") -> document(RESTAURANTE_ID)
-
-        val restauranteDocRef = db.collection("users").document(USER_ADMIN_ID)
-            .collection("restaurantes").document(RESTAURANTE_ID)
+        // Usando os IDs dinâmicos
+        val restauranteDocRef = db.collection("operadores").document(currentDonoId)
+            .collection("restaurantes").document(currentRestauranteId)
 
         restauranteDocRef.get()
             .addOnSuccessListener { document ->
@@ -81,24 +94,20 @@ class CardapioFragment : Fragment() {
                     binding.txtDescricaoRestaurante.text = descricao
 
                     if (!imageUrl.isNullOrEmpty()) {
-                        // Garante que o Glide é carregado no contexto do Fragment
                         Glide.with(this).load(imageUrl).centerCrop().into(binding.imgBanner)
                     }
                 } else {
-                    Log.e("Cardapio", "Documento do restaurante não encontrado.")
-                    Toast.makeText(context, "Restaurante indisponível.", Toast.LENGTH_LONG).show()
+                    Log.e("Cardapio", "Restaurante não encontrado no banco.")
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("Cardapio", "Erro ao carregar dados do restaurante: $e")
-                Toast.makeText(context, "Erro de conexão.", Toast.LENGTH_SHORT).show()
+                Log.e("Cardapio", "Erro conexao: $e")
             }
     }
-    // Dentro de CardapioFragment, defina:
-    private val USER_ADMIN_ID = "8UtmPeDZdpRd3RCEHTXwsWlALby2"
 
     private fun carregarCardapio() {
-        val BASE_PATH = "users/$USER_ADMIN_ID/restaurantes/$RESTAURANTE_ID"
+        // Caminho dinâmico baseado no clique
+        val BASE_PATH = "operadores/$currentDonoId/restaurantes/$currentRestauranteId"
 
         val pathCategorias = "$BASE_PATH/categorias"
         val pathProduto = "$BASE_PATH/produtos"
@@ -106,24 +115,30 @@ class CardapioFragment : Fragment() {
         db.collection(pathCategorias).get()
             .addOnSuccessListener { querySnapshot ->
                 listaCategoriasCompletas.clear()
-                // ... (código de verificação de lista vazia) ...
+
+                // Verifica se tem categorias
+                if (querySnapshot.isEmpty) {
+                    // Opcional: Avisar que não tem cardápio
+                }
 
                 for (catDoc in querySnapshot) {
-                    // ... (código de pegar ID e Nome) ...
+                    val catNome = catDoc.getString("nome") ?: "Categoria"
 
                     catDoc.reference.collection("produtosCategoria").get()
                         .addOnSuccessListener { produtosSnapshot ->
 
+                            val produtosDestaCategoria = mutableListOf<Produto>()
                             val totalProdutosParaBuscar = produtosSnapshot.size()
                             var produtosProcessados = 0
-                            val produtosDestaCategoria = mutableListOf<Produto>()
 
-                            // ... (código para categoria vazia) ...
+                            if (totalProdutosParaBuscar == 0) {
+                                // Se categoria não tem produtos, decide se mostra ou não
+                                // organizarEAtualizarLista(...)
+                            }
 
                             for (prodLinkDoc in produtosSnapshot) {
                                 val produtoIdReal = prodLinkDoc.id
 
-                                // Agora o pathProduto usa o caminho completo
                                 db.collection(pathProduto).document(produtoIdReal).get()
                                     .addOnSuccessListener { prodDetailDoc ->
                                         if (prodDetailDoc.exists()) {
@@ -133,19 +148,15 @@ class CardapioFragment : Fragment() {
                                                 produtosDestaCategoria.add(it)
                                             }
                                         }
-
                                         produtosProcessados++
                                         if (produtosProcessados == totalProdutosParaBuscar) {
-                                            organizarEAtualizarLista(Categoria(catDoc.id, catDoc.getString("nome") ?: "Categoria", produtosDestaCategoria))
+                                            organizarEAtualizarLista(Categoria(catDoc.id, catNome, produtosDestaCategoria))
                                         }
                                     }
-                                    // Tratamento de erro para buscar o produto individual
-                                    .addOnFailureListener { e ->
-                                        Log.e("Cardapio", "Erro ao buscar produto: $produtoIdReal", e)
-                                        // Devemos ainda contar este produto como processado para não travar a UI
-                                        produtosProcessados++
+                                    .addOnFailureListener {
+                                        produtosProcessados++ // Conta mesmo com erro para não travar
                                         if (produtosProcessados == totalProdutosParaBuscar) {
-                                            organizarEAtualizarLista(Categoria(catDoc.id, catDoc.getString("nome") ?: "Categoria", produtosDestaCategoria))
+                                            organizarEAtualizarLista(Categoria(catDoc.id, catNome, produtosDestaCategoria))
                                         }
                                     }
                             }
@@ -154,7 +165,6 @@ class CardapioFragment : Fragment() {
             }
             .addOnFailureListener { e ->
                 Log.e("Cardapio", "Erro ao carregar categorias", e)
-                Toast.makeText(context, "Erro ao carregar cardápio", Toast.LENGTH_SHORT).show()
             }
     }
 

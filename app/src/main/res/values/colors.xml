@@ -5,6 +5,7 @@
     <color name="color_Primary">#ABFADF43</color>
     <color name="color_Secondary">#FF8A00</color>
     <color name="cinza_suave">#F1F1F1</color>
+    <color name="cinza_medio">#CCCCCC</color>
     <color name="cinza_intenso">#A9A9A9</color>
     <color name="color_Primary_suave">#ABFFF6C9</color>
 </resources>
