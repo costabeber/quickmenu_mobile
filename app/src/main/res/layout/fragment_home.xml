@@ -86,17 +86,31 @@
         app:layout_constraintBottom_toBottomOf="parent"
         tools:itemCount="3"/>
 
-    <ImageButton
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/btn_qr_code"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:background="@drawable/circle_image_background"
+        android:contentDescription="Escanear QR Code"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_qr_code"
-        android:contentDescription="Escanear QR Code"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+
+            android:src="@drawable/ic_qr_code"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

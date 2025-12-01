@@ -1,73 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FDFDFD">
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <FrameLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="24dp"
-            android:clipToPadding="false"
+            android:orientation="vertical">
 
-            >
-
-            <ImageView
-                android:id="@+id/imgBanner"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:scaleType="centerCrop"
-                android:src="@android:drawable/ic_menu_camera"
-                android:background="#FFC107" />
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="-20dp"
-                app:cardCornerRadius="20dp"
-                app:cardBackgroundColor="#3E2723">
+                android:paddingBottom="24dp"
+                android:clipToPadding="false">
 
-                <TextView
-                    android:id="@+id/txtNomeRestaurante"
+                <ImageView
+                    android:id="@+id/imgBanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_menu_camera"
+                    android:background="#FFC107" />
+
+                <ImageButton
+                    android:id="@+id/btnVoltar"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:elevation="4dp"
+                    android:src="@drawable/ic_arrow_back"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_white_circle"
+                    app:tint="@android:color/black" />
+
+                <androidx.cardview.widget.CardView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="24dp"
-                    android:paddingVertical="8dp"
-                    android:text="Cantina da Sônia"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
-                    android:textSize="20sp"/>
-            </androidx.cardview.widget.CardView>
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:layout_marginBottom="-20dp"
+                    app:cardCornerRadius="20dp"
+                    app:cardBackgroundColor="#3E2723">
 
-        </FrameLayout>
+                    <TextView
+                        android:id="@+id/txtNomeRestaurante"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="24dp"
+                        android:paddingVertical="8dp"
+                        android:text="Cantina da Sônia"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        android:textSize="20sp"/>
+                </androidx.cardview.widget.CardView>
+            </FrameLayout>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="20dp"/>
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="20dp"/>
 
-        <TextView
-            android:id="@+id/txtDescricaoRestaurante"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingHorizontal="32dp"
-            android:text="A melhor comida caseira da região. Aberto das 18h às 23h."
-            android:textColor="#5D4037"
-            android:textSize="14dp"/>
+            <TextView
+                android:id="@+id/txtDescricaoRestaurante"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingHorizontal="32dp"
+                android:text="A melhor comida caseira da região."
+                android:textColor="#5D4037"
+                android:textSize="14sp"/>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvCategorias"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"
-            android:layout_marginTop="16dp"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvCategorias"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:layout_marginTop="16dp"/>
 
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/btnVerCarrinho"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="Ver Carrinho"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/color_Secondary"
+        app:iconTint="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

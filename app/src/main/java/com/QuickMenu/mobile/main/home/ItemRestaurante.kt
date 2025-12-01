@@ -1,7 +1,8 @@
 package com.QuickMenu.mobile.main.home
 
 data class ItemRestaurante(
-    val id: String = "",
+    var id: String = "",
+    var userId: String = "",
     val nome: String = "",
     val descricao: String = "",
     val imageUrl: String? = null,

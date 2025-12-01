@@ -11,9 +11,11 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.QuickMenu.mobile.R
 import com.QuickMenu.mobile.databinding.FragmentHomeBinding
+import com.QuickMenu.mobile.main.cardapio.CardapioFragment
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
@@ -88,17 +90,31 @@ class HomeFragment : Fragment() {
                     return@addOnSuccessListener
                 }
                 allRestaurants.clear()
+
                 for (document in result) {
-                    val restaurante = document.toObject(ItemRestaurante::class.java).copy(id = document.id)
+                    // Converte o JSON para o objeto (preenche nome, imagem, etc)
+                    val restaurante = document.toObject(ItemRestaurante::class.java)
+
+                    // Preenche o ID do restaurante
+                    restaurante.id = document.id
+
+
+                    // document.reference = caminho completo
+                    // .parent = coleção "restaurantes"
+                    // .parent = documento do Usuário (Operador)
+                    val operadorId = document.reference.parent.parent?.id ?: ""
+
+                    restaurante.userId = operadorId // Guardamos na memória
+
                     allRestaurants.add(restaurante)
                 }
+
                 // Exibe a lista completa inicialmente
                 filterAndDisplayRestaurants("")
                 Log.d("HomeFragment", "${allRestaurants.size} restaurantes carregados.")
             }
             .addOnFailureListener { exception ->
                 Log.w("HomeFragment", "Erro ao buscar restaurantes.", exception)
-                Toast.makeText(context, "Erro ao carregar restaurantes.", Toast.LENGTH_LONG).show()
             }
     }
 
@@ -130,16 +146,29 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupRestaurantList() {
-        // Inicializa o adapter e define os callbacks de clique
         restaurantAdapter = ItemRestauranteAdapter(mutableListOf(),
-            onFavoriteClick = { restaurante: ItemRestaurante ->
+            onFavoriteClick = { restaurante ->
                 toggleFavorite(restaurante)
             },
             onItemClick = { restaurante ->
-                // Adiciona o restaurante clicado à lista de "últimos pesquisados"
                 updateLastSearched(restaurante)
-                // TODO: Navegar para a tela de detalhes do restaurante
-                Toast.makeText(context, "Clicou em: ${restaurante.nome}", Toast.LENGTH_SHORT).show()
+
+
+
+                // Prepara os dados
+                val bundle = Bundle().apply {
+                    putString("restauranteId", restaurante.id)
+                    putString("donoId", restaurante.userId)
+                }
+
+                // Navegan usando o ID que está no seu XML de navegação
+
+                try {
+                    findNavController().navigate(R.id.cardapioFragment, bundle)
+                } catch (e: Exception) {
+                    // Esse Log ajuda a identificar se o ID está errado ou se a ação não existe
+                    Log.e("HomeFragment", "Erro ao navegar: ${e.message}")
+                }
             }
         )
 
@@ -148,7 +177,6 @@ class HomeFragment : Fragment() {
             adapter = restaurantAdapter
         }
     }
-
     private fun setupSearchBar() {
         binding.searchBar.doOnTextChanged { text, _, _, _ ->
             val query = text.toString().trim()
