@@ -10,7 +10,7 @@ import com.QuickMenu.mobile.databinding.ItemCategoriaBinding
 
 class CategoriaAdapter(
     private val categorias: List<Categoria>,
-    private val onAddProdutoClick: (Produto) -> Unit
+    private val onAddProdutoClick: (ProdutoCardapio) -> Unit
 ) : RecyclerView.Adapter<CategoriaAdapter.CategoriaViewHolder>() {
 
     inner class CategoriaViewHolder(val binding: ItemCategoriaBinding) :
@@ -26,7 +26,7 @@ class CategoriaAdapter(
         holder.binding.txtTituloCategoria.text = categoria.nome
 
         // Configura o adapter interno (Produtos)
-        val produtoAdapter = ProdutoAdapter(categoria.produtos, onAddProdutoClick)
+        val produtoAdapter = ProdutoAdapter(categoria.produtoCardapios, onAddProdutoClick)
 
         holder.binding.rvProdutos.apply {
             layoutManager = LinearLayoutManager(holder.itemView.context, RecyclerView.VERTICAL, false)

@@ -93,7 +93,7 @@
                     app:layout_constraintEnd_toEndOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- RecyclerView dos produtos -->
+            <!-- RecyclerView dos produtoCardapios -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerProdutos"
                 android:layout_width="0dp"

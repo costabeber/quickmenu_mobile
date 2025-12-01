@@ -19,4 +19,10 @@
     <style name="Theme.Start" parent="Theme.AppCompat.Light.NoActionBar">
     </style>
 
+    <style name="RatingStar">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:layout_marginHorizontal" tools:targetApi="26">2dp</item>
+        <item name="android:tint">#FFCC00</item> </style>
+
 </resources>

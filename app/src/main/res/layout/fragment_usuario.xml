@@ -118,7 +118,8 @@
             android:id="@+id/iv_restaurante_1"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            app:srcCompat="@drawable/cantinasonia" />
+
+             />
 
         <Space
             android:layout_width="0dp"
@@ -129,7 +130,7 @@
             android:id="@+id/iv_restaurante_2"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            app:srcCompat="@drawable/burger" />
+             />
 
         <Space
             android:layout_width="0dp"
@@ -140,7 +141,7 @@
             android:id="@+id/iv_restaurante_3"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            app:srcCompat="@drawable/sweetcake" />
+             />
     </LinearLayout>
 
 

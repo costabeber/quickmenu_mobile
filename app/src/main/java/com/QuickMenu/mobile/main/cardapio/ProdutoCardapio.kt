@@ -1,6 +1,6 @@
 package com.QuickMenu.mobile.main.cardapio
 
-data class Produto(
+data class ProdutoCardapio(
     var produtoId: String = "",
     val nome: String = "",
     val descricao: String = "",

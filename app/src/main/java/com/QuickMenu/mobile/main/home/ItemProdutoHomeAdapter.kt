@@ -40,6 +40,8 @@ class ItemProdutoHomeAdapter(private var products:  MutableList<ItemProdutoHome>
         }
     }
 
+
+
     // 4. getItemCount: Retorna o número total de itens.
     override fun getItemCount() = products.size
 

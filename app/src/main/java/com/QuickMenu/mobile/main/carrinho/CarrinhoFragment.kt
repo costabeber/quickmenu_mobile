@@ -64,6 +64,8 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         //BOTÃO DE FINALIZAR COMPRA
 
 
+
+
         binding.btnComprar.setOnClickListener {
             if (listaItens.isNotEmpty()) {
                 finalizarPedido()
@@ -92,14 +94,22 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         binding.rvCarrinhoItens.layoutManager = LinearLayoutManager(context)
         binding.rvCarrinhoItens.adapter = carrinhoAdapter
     }
-
     private fun setupToolbar() {
         val toolbar = binding.toolbar
-        (activity as AppCompatActivity).setSupportActionBar(toolbar)
-        val navController = findNavController()
-        toolbar.setupWithNavController(navController)
-        (activity as AppCompatActivity).supportInvalidateOptionsMenu()
+
+        // Esta linha associa a toolbar ao NavController, mas vamos adicionar o comportamento de "voltar".
+        toolbar.setupWithNavController(findNavController())
+
+        // Adicione esta linha para garantir que o botão "voltar" use a pilha de navegação corretamente.
+        toolbar.setNavigationOnClickListener {
+            // Este comando simula o pressionar do botão "voltar" do sistema,
+            // que sempre retorna para a tela anterior na pilha.
+            findNavController().navigateUp()
+        }
     }
+
+
+
 
     // FINALIZAR PEDIDO
     private fun finalizarPedido() {
@@ -223,7 +233,7 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         super.onDestroyView()
         // Para de ouvir o banco quando sair da tela para economizar dados
         firestoreListener?.remove()
-        (activity as? AppCompatActivity)?.setSupportActionBar(null)
+
         _binding = null
     }
 }

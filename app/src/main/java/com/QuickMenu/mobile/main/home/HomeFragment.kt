@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
@@ -15,7 +14,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.QuickMenu.mobile.R
 import com.QuickMenu.mobile.databinding.FragmentHomeBinding
-import com.QuickMenu.mobile.main.cardapio.CardapioFragment
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
@@ -58,26 +56,25 @@ class HomeFragment : Fragment() {
         setupSearchBar()
         setupFilterButtons()
 
+        voltar()
+    }
+
+    private fun voltar(){
+
+        val navController = findNavController()
+        val isCardapio = navController.previousBackStackEntry?.destination?.id == R.id.cardapioFragment
+
         val backPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Verifica se o filtro de favoritos está ativo
-                if (isFilteredByFavorites) {
-                    // Se estiver, desativa o filtro e volta para a lista principal
-                    isFilteredByFavorites = false
-                    filterAndDisplayRestaurants("")
-
-                    // Mostra uma mensagem opcional para o usuário
-                    Toast.makeText(context, "Exibindo todos os restaurantes", Toast.LENGTH_SHORT).show()
-                } else {
-                    // Se não estiver, executa a ação padrão do botão voltar (ex: sair do app)
-                    // Para isso, desabilitamos temporariamente nosso callback e chamamos o back de novo
+                if (isCardapio) {
                     isEnabled = false
                     requireActivity().onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true // Reabilita para futuras interceptações
+                    isEnabled = true
                 }
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressedCallback)
+
     }
 
     // --- CARREGAMENTO DE DADOS ---

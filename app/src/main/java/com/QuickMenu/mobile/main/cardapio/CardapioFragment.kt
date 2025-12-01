@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.QuickMenu.mobile.R
 
 
 
@@ -60,30 +61,30 @@ class CardapioFragment : Fragment() {
         setupRecyclerView()
         carregarDadosRestaurante() // Agora usa as variáveis dinâmicas
         carregarCardapio()         // Agora usa as variáveis dinâmicas
+
+        initListeners()
+
+    }
+
+    private fun initListeners(){
         binding.btnVoltar.setOnClickListener {
-            // Isso diz ao NavController para voltar para a tela anterior na pilha.
-            // Como você veio da Home, ele voltará para a Home.
-            findNavController().navigateUp()
+            // Usar popBackStack() é mais idiomático e seguro que navigateUp().
+            // Ele simplesmente remove o fragmento atual (Cardapio) da pilha,
+            // revelando o anterior (Home).
+            findNavController().popBackStack()
         }
+
         binding.btnVerCarrinho.setOnClickListener {
-            // Certifique-se de criar essa seta no seu navigation graph!
-            // Se o nome da ação for diferente, ajuste abaixo.
-            try {
-                findNavController().navigate(com.QuickMenu.mobile.R.id.carrinhoFragment)
-            } catch (e: Exception) {
-                // Caso não tenha criado a action, tente navegar pelo ID do fragmento (menos recomendado, mas funciona)
-                // findNavController().navigate(com.QuickMenu.mobile.R.id.carrinhoFragment)
-                Toast.makeText(context, "Erro na navegação: Configure o NavGraph", Toast.LENGTH_SHORT).show()
-            }
+            findNavController().navigate(R.id.action_cardapioFragment_to_carrinhoFragment)
         }
 
     }
 
 
     private fun setupRecyclerView() {
-        // Passamos a função de adicionar ao carrinho para o adapter
+        // ⚠️ ALTERADO: Passamos a função de NAVEGAR para o adapter
         categoriaAdapter = CategoriaAdapter(listaCategoriasCompletas) { produtoClicado ->
-            adicionarAoCarrinho(produtoClicado)
+            navegarParaProduto(produtoClicado)
         }
 
         binding.rvCategorias.apply {
@@ -93,6 +94,29 @@ class CardapioFragment : Fragment() {
         }
     }
 
+    // Em CardapioFragment.kt (apenas a função navegarParaProduto)
+
+    private fun navegarParaProduto(produto: ProdutoCardapio) {
+        val bundle = Bundle().apply {
+            putString("produtoId", produto.produtoId)
+            putString("donoId", currentDonoId)
+
+            putString("nomeProduto", produto.nome)
+            putDouble("precoUnitario", produto.preco)
+            putString("descricaoProduto", produto.descricao)
+            putString("imageUrlProduto", produto.imageUrl)
+        }
+
+        try {
+            findNavController().navigate(R.id.action_cardapioFragment_to_produtoFragment, bundle)
+        } catch (e: Exception) {
+            Log.e("Cardapio", "Erro ao navegar para Produto: ${e.message}")
+            Toast.makeText(context, "Erro na navegação.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Em CardapioFragment.kt
+
     private fun carregarDadosRestaurante() {
         // Usando os IDs dinâmicos
         val restauranteDocRef = db.collection("operadores").document(currentDonoId)
@@ -100,11 +124,16 @@ class CardapioFragment : Fragment() {
 
         restauranteDocRef.get()
             .addOnSuccessListener { document ->
+
+                // 🛑 CORREÇÃO: Verificar se o binding ainda é válido
+                if (_binding == null) return@addOnSuccessListener
+
                 if (document.exists()) {
                     val nome = document.getString("nome")
                     val descricao = document.getString("descricao")
                     val imageUrl = document.getString("imageUrl")
 
+                    // 🛑 Acesso Seguro ao Binding
                     binding.txtNomeRestaurante.text = nome ?: "Restaurante"
                     binding.txtDescricaoRestaurante.text = descricao
 
@@ -142,12 +171,12 @@ class CardapioFragment : Fragment() {
                     catDoc.reference.collection("produtosCategoria").get()
                         .addOnSuccessListener { produtosSnapshot ->
 
-                            val produtosDestaCategoria = mutableListOf<Produto>()
+                            val produtosDestaCategoria = mutableListOf<ProdutoCardapio>()
                             val totalProdutosParaBuscar = produtosSnapshot.size()
                             var produtosProcessados = 0
 
                             if (totalProdutosParaBuscar == 0) {
-                                // Se categoria não tem produtos, decide se mostra ou não
+                                // Se categoria não tem produtoCardapios, decide se mostra ou não
                                 // organizarEAtualizarLista(...)
                             }
 
@@ -157,7 +186,7 @@ class CardapioFragment : Fragment() {
                                 db.collection(pathProduto).document(produtoIdReal).get()
                                     .addOnSuccessListener { prodDetailDoc ->
                                         if (prodDetailDoc.exists()) {
-                                            val prodObj = prodDetailDoc.toObject(Produto::class.java)
+                                            val prodObj = prodDetailDoc.toObject(ProdutoCardapio::class.java)
                                             prodObj?.let {
                                                 it.produtoId = produtoIdReal
                                                 produtosDestaCategoria.add(it)
@@ -193,35 +222,7 @@ class CardapioFragment : Fragment() {
     }
 
     // 3. Adicionar ao Carrinho (Firestore)
-    private fun adicionarAoCarrinho(produto: com.QuickMenu.mobile.main.cardapio.Produto) {
-        val userId = auth.currentUser?.uid
-        if (userId == null) {
-            Toast.makeText(context, "Faça login para adicionar ao carrinho", Toast.LENGTH_SHORT).show()
-            return
-        }
 
-        val carrinhoRef = db.collection("Usuario").document(userId).collection("Carrinho")
-        val docProduto = carrinhoRef.document(produto.produtoId)
-
-        // Verifica se já existe para incrementar quantidade, ou cria novo
-        docProduto.get().addOnSuccessListener { document ->
-            if (document.exists()) {
-                val qtdAtual = document.getLong("quantidade")?.toInt() ?: 0
-                docProduto.update("quantidade", qtdAtual + 1)
-                Toast.makeText(context, "+1 ${produto.nome}", Toast.LENGTH_SHORT).show()
-            } else {
-                val novoItem = ItemCarrinho(
-                    produtoId = produto.produtoId,
-                    nome = produto.nome,
-                    preco = produto.preco,
-                    quantidade = 1,
-                    imageUrl = produto.imageUrl
-                )
-                docProduto.set(novoItem)
-                Toast.makeText(context, "Adicionado ao carrinho!", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()
