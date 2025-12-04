@@ -21,7 +21,7 @@ class ItemProdutoHomeAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
 
-        holder.binding.tvNome.text = item.nome // Supondo que você tenha esse Textview
+        holder.binding.tvNome.text = item.nome
         holder.binding.tvPrice.text = item.preco
 
         // Carregamento da Imagem com Glide
@@ -29,9 +29,9 @@ class ItemProdutoHomeAdapter(
             Glide.with(holder.itemView.context)
                 .load(item.imageUrl)
                 .centerCrop()
-                .placeholder(R.drawable.pao) // Imagem padrão enquanto carrega
-                .error(R.drawable.pao)       // Imagem caso falhe
-                .into(holder.binding.imgItem) // ID da ImageView no XML item_produto
+                .placeholder(R.drawable.pao)
+                .error(R.drawable.pao)
+                .into(holder.binding.imgItem)
         } else {
             holder.binding.imgItem.setImageResource(R.drawable.pao)
         }

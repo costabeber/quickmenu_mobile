@@ -51,18 +51,16 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         db = Firebase.firestore
 
-        setupRecyclerViews() // Configura os adapters vazios
-
+        setupRecyclerViews()
         loadFavorites()
         loadRestaurantsFromFirestore()
-        fetchRecentOrderedProducts() // <--- NOVA FUNÇÃO AQUI
+        fetchRecentOrderedProducts()
 
         setupSearchBar()
         setupFilterButtons()
         voltar()
     }
 
-    // --- SETUP INICIAL ---
     private fun setupRecyclerViews() {
         // Setup Recentes (Horizontal)
         recentAdapter = ItemProdutoHomeAdapter(emptyList())
@@ -71,7 +69,7 @@ class HomeFragment : Fragment() {
             adapter = recentAdapter
         }
 
-        // Setup Restaurantes (Vertical)
+        // Setup Restaurantes
         restaurantAdapter = ItemRestauranteAdapter(mutableListOf(),
             onFavoriteClick = { toggleFavorite(it) },
             onItemClick = { restaurante ->
@@ -83,23 +81,23 @@ class HomeFragment : Fragment() {
                 try {
                     findNavController().navigate(R.id.cardapioFragment, bundle)
                 } catch (e: Exception) {
-                    Log.e("HomeFragment", "Erro ao navegar: ${e.message}")
+                    Log.e("HomeFragment", getString(R.string.log_erro_navegar, e.message))
                 }
             }
         )
+
         binding.recyclerRestaurantList.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
             adapter = restaurantAdapter
         }
     }
 
-    // --- NOVA LÓGICA: BUSCAR PRODUTOS RECENTES ---
     private fun fetchRecentOrderedProducts() {
         val userId = auth.currentUser?.uid ?: return
 
         lifecycleScope.launch {
             try {
-                // 1. Busca os últimos 5 pedidos (para garantir que teremos pelo menos 3 itens)
+
                 val pedidosSnapshot = db.collection("Usuario")
                     .document(userId)
                     .collection("Pedidos")
@@ -109,11 +107,9 @@ class HomeFragment : Fragment() {
                     .await()
 
                 val todosProdutosRecentes = mutableListOf<ItemProdutoHome>()
-                val nomesAdicionados = mutableSetOf<String>() // Para evitar duplicatas visuais (ex: 3 cocas seguidas)
+                val nomesAdicionados = mutableSetOf<String>()
 
-                // 2. Itera sobre os pedidos para buscar a subcoleção "Itens"
                 for (doc in pedidosSnapshot.documents) {
-                    // Se já temos 3 produtos únicos, paramos de buscar para economizar leitura
                     if (todosProdutosRecentes.size >= 3) break
 
                     val itensSnapshot = doc.reference.collection("Itens").get().await()
@@ -123,11 +119,10 @@ class HomeFragment : Fragment() {
 
                         if (produtoBD != null && !nomesAdicionados.contains(produtoBD.nome)) {
 
-                            // Formata o preço
-                            val precoFormatado = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+                            val precoFormatado = NumberFormat
+                                .getCurrencyInstance(Locale("pt", "BR"))
                                 .format(produtoBD.preco)
 
-                            // Cria o objeto de UI
                             val itemHome = ItemProdutoHome(
                                 nome = produtoBD.nome,
                                 preco = precoFormatado,
@@ -142,50 +137,45 @@ class HomeFragment : Fragment() {
                     }
                 }
 
-                // 3. Atualiza o Adapter na Thread principal
                 if (todosProdutosRecentes.isNotEmpty()) {
                     recentAdapter.updateList(todosProdutosRecentes)
-                    // binding.textRecentes.visibility = View.VISIBLE
                 } else {
-                    // Opcional: Esconder o título "Recentes" se não houver nada
-                    // binding.textRecentes.visibility = View.GONE
-                    Log.d("HomeFragment", "Nenhum produto recente encontrado.")
+                    Log.d("HomeFragment", getString(R.string.log_produtos_recentes_vazio))
                 }
 
             } catch (e: Exception) {
-                Log.e("HomeFragment", "Erro ao buscar produtos recentes", e)
+                Log.e("HomeFragment", getString(R.string.log_erro_produtos_recentes), e)
             }
         }
     }
 
-    // ... (Mantenha suas outras funções: loadRestaurants, searchBar, favorites, etc.) ...
-
     private fun loadRestaurantsFromFirestore() {
-        // ... (seu código existente)
         db.collectionGroup("restaurantes").get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) return@addOnSuccessListener
+
                 allRestaurants.clear()
                 for (document in result) {
                     val restaurante = document.toObject(ItemRestaurante::class.java)
                     restaurante.id = document.id
-                    val operadorId = document.reference.parent.parent?.id ?: ""
-                    restaurante.userId = operadorId
+                    restaurante.userId = document.reference.parent.parent?.id ?: ""
                     allRestaurants.add(restaurante)
                 }
+
                 filterAndDisplayRestaurants("")
             }
     }
 
-    // ... (Resto do código igual ao que você enviou)
-
     private fun loadFavorites() {
-        val prefs = activity?.getSharedPreferences("RestaurantPreferences", Context.MODE_PRIVATE) ?: return
-        favoriteRestaurants = prefs.getStringSet("favorite_ids", emptySet())?.toMutableSet() ?: mutableSetOf()
+        val prefs = activity?.getSharedPreferences("RestaurantPreferences", Context.MODE_PRIVATE)
+            ?: return
+        favoriteRestaurants = prefs.getStringSet("favorite_ids", emptySet())
+            ?.toMutableSet() ?: mutableSetOf()
     }
 
     private fun saveFavorites() {
-        val prefs = activity?.getSharedPreferences("RestaurantPreferences", Context.MODE_PRIVATE) ?: return
+        val prefs = activity?.getSharedPreferences("RestaurantPreferences", Context.MODE_PRIVATE)
+            ?: return
         with(prefs.edit()) {
             putStringSet("favorite_ids", favoriteRestaurants)
             apply()
@@ -199,12 +189,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupFilterButtons() {
-        // ... (seu código existente)
         binding.btnFavoritos.setOnClickListener {
-            // ...
             val favoritedList = allRestaurants.filter { favoriteRestaurants.contains(it.id) }
             restaurantAdapter.updateList(favoritedList, favoriteRestaurants)
         }
+
         binding.root.setOnClickListener {
             filterAndDisplayRestaurants("")
         }
@@ -216,6 +205,7 @@ class HomeFragment : Fragment() {
         } else {
             allRestaurants.filter { it.nome.contains(query, ignoreCase = true) }
         }
+
         val sortedList = filteredList.sortedByDescending { favoriteRestaurants.contains(it.id) }
         restaurantAdapter.updateList(sortedList, favoriteRestaurants)
     }
@@ -236,13 +226,12 @@ class HomeFragment : Fragment() {
         if (lastSearchedRestaurants.size > 5) {
             lastSearchedRestaurants = lastSearchedRestaurants.take(5).toMutableList()
         }
-        // ... Salvar em SharedPreferences (código existente)
     }
 
-    private fun voltar(){
-        // ... (seu código existente)
+    private fun voltar() {
         val navController = findNavController()
         val isCardapio = navController.previousBackStackEntry?.destination?.id == R.id.cardapioFragment
+
         val backPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (isCardapio) {
@@ -252,6 +241,7 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressedCallback)
     }
 

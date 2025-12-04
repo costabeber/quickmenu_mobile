@@ -1,12 +1,10 @@
 package com.QuickMenu.mobile.auth
 
-import android.content.ContentValues.TAG
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +17,6 @@ import com.QuickMenu.mobile.databinding.FragmentLoginBinding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginFragment : Fragment() {
 
@@ -40,66 +37,74 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         initListeners()
-
         linkCadastro()
     }
 
-    private fun initListeners(){
+    private fun initListeners() {
         binding.btnEntrar.setOnClickListener {
             validateData()
         }
     }
-    private fun validateData(){
+
+    private fun validateData() {
 
         val email = binding.etEmail.text.toString().trim()
         val senha = binding.etSenha.text.toString().trim()
 
         if (email.isEmpty() || senha.isEmpty()) {
-            Toast.makeText(requireContext(),
-                "Preencha todos os campos",
-                Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.error_empty_fields),
+                Toast.LENGTH_SHORT
+            ).show()
 
         } else {
             binding.progressBar.isVisible = true
-            login(email,senha)
-
+            login(email, senha)
         }
     }
 
-    private fun login(email: String, senha: String){
+    private fun login(email: String, senha: String) {
         try {
             auth = Firebase.auth
 
-            auth.signInWithEmailAndPassword(email, senha).addOnCompleteListener { task ->
+            auth.signInWithEmailAndPassword(email, senha)
+                .addOnCompleteListener { task ->
 
-                if (task.isSuccessful){
-                    Toast.makeText(
-                        requireContext(),
-                        "Login realizado com sucesso!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    if (task.isSuccessful) {
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.login_success),
+                            Toast.LENGTH_SHORT
+                        ).show()
 
-                    (requireActivity() as AuthActivity).navigateToMain()
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        task.exception.toString(),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.progressBar.isVisible = false
+                        (requireActivity() as AuthActivity).navigateToMain()
+
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            task.exception?.message ?: getString(R.string.error_unknown),
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        binding.progressBar.isVisible = false
+                    }
                 }
-            }
-        }
 
-        catch (erro : Exception){
-            Toast.makeText(requireContext(),
-                erro.message,
-                Toast.LENGTH_SHORT).show()
+        } catch (erro: Exception) {
+            Toast.makeText(
+                requireContext(),
+                erro.message ?: getString(R.string.error_unknown),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
-    private fun linkCadastro(){
-        val fullText = "Preencha com seus dados para realizar o cadastro"
+    private fun linkCadastro() {
+
+        val fullText = getString(R.string.login_cadastro_text)
+        val wordToClick = getString(R.string.login_cadastro_clickable)
+
         val spannableString = SpannableString(fullText)
 
         val clickableSpan = object : ClickableSpan() {
@@ -108,10 +113,15 @@ class LoginFragment : Fragment() {
             }
         }
 
-        val startIndex = fullText.indexOf("cadastro")
+        val startIndex = fullText.indexOf(wordToClick)
         if (startIndex != -1) {
-            val endIndex = startIndex + "cadastro".length
-            spannableString.setSpan(clickableSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            val endIndex = startIndex + wordToClick.length
+            spannableString.setSpan(
+                clickableSpan,
+                startIndex,
+                endIndex,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
         }
 
         binding.tvCadastro.text = spannableString

@@ -5,15 +5,15 @@ import android.icu.text.NumberFormat
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.QuickMenu.mobile.R
 import com.QuickMenu.mobile.databinding.FragmentCarrinhoBinding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -58,29 +58,26 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         setupToolbar()
         setupRecyclerView()
 
-        // Garante a sincronia
         startRealtimeCartListener()
-
-        //BOTÃO DE FINALIZAR COMPRA
-
-
-
 
         binding.btnComprar.setOnClickListener {
             if (listaItens.isNotEmpty()) {
                 finalizarPedido()
             } else {
-                Toast.makeText(context, "Seu carrinho está vazio!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    getString(R.string.carrinho_vazio),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-
         }
 
-
-        // Botão de teste para adicionar itens
+        // Botão de teste
         binding.btnAddItemTeste.setOnClickListener {
+            val id = System.currentTimeMillis()
             val novoItem = ItemCarrinho(
-                produtoId = "ID_${System.currentTimeMillis()}",
-                nome = "Item Teste",
+                produtoId = getString(R.string.item_teste_id, id),
+                nome = getString(R.string.item_teste_nome),
                 preco = 10.00,
                 quantidade = 1,
                 imageUrl = ""
@@ -94,83 +91,75 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
         binding.rvCarrinhoItens.layoutManager = LinearLayoutManager(context)
         binding.rvCarrinhoItens.adapter = carrinhoAdapter
     }
+
     private fun setupToolbar() {
         val toolbar = binding.toolbar
-
-        // Esta linha associa a toolbar ao NavController, mas vamos adicionar o comportamento de "voltar".
         toolbar.setupWithNavController(findNavController())
-
-        // Adicione esta linha para garantir que o botão "voltar" use a pilha de navegação corretamente.
-        toolbar.setNavigationOnClickListener {
-            // Este comando simula o pressionar do botão "voltar" do sistema,
-            // que sempre retorna para a tela anterior na pilha.
-            findNavController().navigateUp()
-        }
+        toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
     }
 
-
-
-
-    // FINALIZAR PEDIDO
     private fun finalizarPedido() {
         val userId = auth.currentUser?.uid ?: return
 
-        // Gerar ID baseado na Data e Hora (yyyyMMdd_HHmmss)
         val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
         val dataAtual = Date()
         val pedidoId = sdf.format(dataAtual)
 
-        //  Calcular preço total
         val precoTotal = calcularTotal()
 
-        //  Criar referência para o novo pedido
-        val pedidoRef = banco.collection("Usuario").document(userId)
-            .collection("Pedidos").document(pedidoId)
+        val pedidoRef = banco.collection(getString(R.string.firebase_usuario))
+            .document(userId)
+            .collection(getString(R.string.firebase_pedidos))
+            .document(pedidoId)
 
-        // Dados do cabeçalho do pedido
         val dadosPedido = hashMapOf(
-            "idRestaurante" to "", // Por enquanto vazio, conforme solicitado
+            "idRestaurante" to "",
             "precoTotal" to precoTotal,
-            "dataPedido" to dataAtual // Útil para ordenação futura
+            "dataPedido" to dataAtual
         )
 
-        // Iniciar um BATCH (Lote de escrita).
-        // garante que cria o pedido E apaga o carrinho ao mesmo tempo.
         val batch = banco.batch()
 
-        // A) Salva os dados principais do pedido
         batch.set(pedidoRef, dadosPedido)
 
-        //Move os itens do Carrinho para dentro do Pedido e prepara a deleção do Carrinho
-        val carrinhoRef = banco.collection("Usuario").document(userId).collection("Carrinho")
+        val carrinhoRef = banco.collection(getString(R.string.firebase_usuario))
+            .document(userId)
+            .collection(getString(R.string.firebase_carrinho))
 
         for (item in listaItens) {
-            // Copia item para coleção Pedidos -> Itens
-            val itemNoPedidoRef = pedidoRef.collection("Itens").document(item.produtoId)
+            val itemNoPedidoRef = pedidoRef
+                .collection(getString(R.string.firebase_itens))
+                .document(item.produtoId)
+
             batch.set(itemNoPedidoRef, item)
 
-            // Deleta item da coleção Carrinho
             val itemNoCarrinhoRef = carrinhoRef.document(item.produtoId)
             batch.delete(itemNoCarrinhoRef)
         }
 
-        // Executa todas as operações
         batch.commit()
             .addOnSuccessListener {
-                Toast.makeText(context, "Pedido realizado com sucesso!", Toast.LENGTH_LONG).show()
-                // A UI vai limpar sozinha porque temos o startRealtimeCartListener ouvindo que deletamos os itens!
-                // Aqui você pode navegar para uma tela de "Sucesso" ou "Meus Pedidos"
+                Toast.makeText(
+                    context,
+                    getString(R.string.pedido_sucesso),
+                    Toast.LENGTH_LONG
+                ).show()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(context, "Erro ao finalizar: ${e.message}", Toast.LENGTH_SHORT).show()
-                Log.e("Carrinho", "Erro batch: ", e)
+                Toast.makeText(
+                    context,
+                    getString(R.string.erro_finalizar, e.message),
+                    Toast.LENGTH_SHORT
+                ).show()
+                Log.e("Carrinho", getString(R.string.log_carrinho_erro_batch), e)
             }
     }
 
-
     private fun getCartRef() =
         auth.currentUser?.uid?.let { uid ->
-            banco.collection("Usuario").document(uid).collection("Carrinho")
+            banco.collection(getString(R.string.firebase_usuario))
+                .document(uid)
+                .collection(getString(R.string.firebase_carrinho))
         }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -179,7 +168,7 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
 
         firestoreListener = cartRef.addSnapshotListener { snapshot, e ->
             if (e != null) {
-                Log.e("Carrinho", "Erro ao ouvir carrinho", e)
+                Log.e("Carrinho", getString(R.string.log_carrinho_erro_ouvir), e)
                 return@addSnapshotListener
             }
 
@@ -193,17 +182,15 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
             }
         }
     }
+
     private fun calcularTotalUnidades(): Int {
-        // Retorna a soma de todas as propriedades 'quantidade' de cada item na lista
         return listaItens.sumOf { it.quantidade }
     }
 
-    // Chamado quando clica no botão (+)
     override fun onUpdateItem(item: ItemCarrinho) {
         saveOrUpdateCartItem(item)
     }
 
-    // Chamado quando clica no lixo ou (-) chega a zero
     override fun onRemoverItem(position: Int) {
         val itemToRemove = listaItens.getOrNull(position) ?: return
         removeCartItem(itemToRemove.produtoId)
@@ -211,18 +198,22 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
 
     private fun saveOrUpdateCartItem(item: ItemCarrinho) {
         getCartRef()?.document(item.produtoId)?.set(item)
-            ?.addOnFailureListener { Log.e("Carrinho", "Erro update: $it") }
+            ?.addOnFailureListener {
+                Log.e("Carrinho", getString(R.string.log_carrinho_erro_update), it)
+            }
     }
 
     private fun removeCartItem(produtoId: String) {
         getCartRef()?.document(produtoId)?.delete()
-            ?.addOnFailureListener { Log.e("Carrinho", "Erro delete: $it") }
+            ?.addOnFailureListener {
+                Log.e("Carrinho", getString(R.string.log_carrinho_erro_delete), it)
+            }
     }
 
     fun onTotalChanged(novoTotal: Double, totalItens: Int) {
         val formatador = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         binding.total.text = formatador.format(novoTotal)
-        binding.totalTitle.text = "Total ($totalItens)"
+        binding.totalTitle.text = getString(R.string.total_titulo, totalItens)
     }
 
     private fun calcularTotal(): Double {
@@ -231,9 +222,7 @@ class CarrinhoFragment : Fragment(), CarrinhoActionsListener {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Para de ouvir o banco quando sair da tela para economizar dados
         firestoreListener?.remove()
-
         _binding = null
     }
 }

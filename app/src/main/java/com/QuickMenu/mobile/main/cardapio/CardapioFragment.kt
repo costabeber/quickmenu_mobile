@@ -1,6 +1,5 @@
 package com.QuickMenu.mobile.main.cardapio
 
-
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,8 +17,6 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.QuickMenu.mobile.R
 
-
-
 class CardapioFragment : Fragment() {
 
     private var _binding: FragmentCardapioBinding? = null
@@ -28,7 +25,6 @@ class CardapioFragment : Fragment() {
     private val db = Firebase.firestore
     private val auth = Firebase.auth
 
-    // Variáveis para guardar os IDs dinâmicos
     private var currentRestauranteId: String = ""
     private var currentDonoId: String = ""
 
@@ -46,43 +42,34 @@ class CardapioFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         arguments?.let { bundle ->
             currentRestauranteId = bundle.getString("restauranteId") ?: ""
             currentDonoId = bundle.getString("donoId") ?: ""
         }
 
         if (currentRestauranteId.isEmpty() || currentDonoId.isEmpty()) {
-            Toast.makeText(context, "Erro ao carregar restaurante", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, getString(R.string.error_load_restaurant), Toast.LENGTH_SHORT).show()
             return
         }
 
-
         setupRecyclerView()
-        carregarDadosRestaurante() // Agora usa as variáveis dinâmicas
-        carregarCardapio()         // Agora usa as variáveis dinâmicas
-
+        carregarDadosRestaurante()
+        carregarCardapio()
         initListeners()
-
     }
 
-    private fun initListeners(){
+    private fun initListeners() {
         binding.btnVoltar.setOnClickListener {
-            // Usar popBackStack() é mais idiomático e seguro que navigateUp().
-            // Ele simplesmente remove o fragmento atual (Cardapio) da pilha,
-            // revelando o anterior (Home).
             findNavController().popBackStack()
         }
 
         binding.btnVerCarrinho.setOnClickListener {
             findNavController().navigate(R.id.action_cardapioFragment_to_carrinhoFragment)
         }
-
     }
 
-
     private fun setupRecyclerView() {
-        // ⚠️ ALTERADO: Passamos a função de NAVEGAR para o adapter
+
         categoriaAdapter = CategoriaAdapter(listaCategoriasCompletas) { produtoClicado ->
             navegarParaProduto(produtoClicado)
         }
@@ -94,13 +81,10 @@ class CardapioFragment : Fragment() {
         }
     }
 
-    // Em CardapioFragment.kt (apenas a função navegarParaProduto)
-
     private fun navegarParaProduto(produto: ProdutoCardapio) {
         val bundle = Bundle().apply {
             putString("produtoId", produto.produtoId)
             putString("donoId", currentDonoId)
-
             putString("nomeProduto", produto.nome)
             putDouble("precoUnitario", produto.preco)
             putString("descricaoProduto", produto.descricao)
@@ -110,22 +94,19 @@ class CardapioFragment : Fragment() {
         try {
             findNavController().navigate(R.id.action_cardapioFragment_to_produtoFragment, bundle)
         } catch (e: Exception) {
-            Log.e("Cardapio", "Erro ao navegar para Produto: ${e.message}")
-            Toast.makeText(context, "Erro na navegação.", Toast.LENGTH_SHORT).show()
+            Log.e("Cardapio", getString(R.string.error_navigation, e.message))
+            Toast.makeText(context, getString(R.string.error_navigation_default), Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Em CardapioFragment.kt
-
     private fun carregarDadosRestaurante() {
-        // Usando os IDs dinâmicos
+
         val restauranteDocRef = db.collection("operadores").document(currentDonoId)
             .collection("restaurantes").document(currentRestauranteId)
 
         restauranteDocRef.get()
             .addOnSuccessListener { document ->
 
-                // 🛑 CORREÇÃO: Verificar se o binding ainda é válido
                 if (_binding == null) return@addOnSuccessListener
 
                 if (document.exists()) {
@@ -133,24 +114,23 @@ class CardapioFragment : Fragment() {
                     val descricao = document.getString("descricao")
                     val imageUrl = document.getString("imageUrl")
 
-                    // 🛑 Acesso Seguro ao Binding
-                    binding.txtNomeRestaurante.text = nome ?: "Restaurante"
+                    binding.txtNomeRestaurante.text = nome ?: getString(R.string.default_restaurant_name)
                     binding.txtDescricaoRestaurante.text = descricao
 
                     if (!imageUrl.isNullOrEmpty()) {
                         Glide.with(this).load(imageUrl).centerCrop().into(binding.imgBanner)
                     }
                 } else {
-                    Log.e("Cardapio", "Restaurante não encontrado no banco.")
+                    Log.e("Cardapio", getString(R.string.error_restaurant_not_found))
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("Cardapio", "Erro conexao: $e")
+                Log.e("Cardapio", getString(R.string.error_connection, e.message))
             }
     }
 
     private fun carregarCardapio() {
-        // Caminho dinâmico baseado no clique
+
         val BASE_PATH = "operadores/$currentDonoId/restaurantes/$currentRestauranteId"
 
         val pathCategorias = "$BASE_PATH/categorias"
@@ -160,13 +140,8 @@ class CardapioFragment : Fragment() {
             .addOnSuccessListener { querySnapshot ->
                 listaCategoriasCompletas.clear()
 
-                // Verifica se tem categorias
-                if (querySnapshot.isEmpty) {
-                    // Opcional: Avisar que não tem cardápio
-                }
-
                 for (catDoc in querySnapshot) {
-                    val catNome = catDoc.getString("nome") ?: "Categoria"
+                    val catNome = catDoc.getString("nome") ?: getString(R.string.default_category_name)
 
                     catDoc.reference.collection("produtosCategoria").get()
                         .addOnSuccessListener { produtosSnapshot ->
@@ -174,11 +149,6 @@ class CardapioFragment : Fragment() {
                             val produtosDestaCategoria = mutableListOf<ProdutoCardapio>()
                             val totalProdutosParaBuscar = produtosSnapshot.size()
                             var produtosProcessados = 0
-
-                            if (totalProdutosParaBuscar == 0) {
-                                // Se categoria não tem produtoCardapios, decide se mostra ou não
-                                // organizarEAtualizarLista(...)
-                            }
 
                             for (prodLinkDoc in produtosSnapshot) {
                                 val produtoIdReal = prodLinkDoc.id
@@ -192,15 +162,20 @@ class CardapioFragment : Fragment() {
                                                 produtosDestaCategoria.add(it)
                                             }
                                         }
+
                                         produtosProcessados++
                                         if (produtosProcessados == totalProdutosParaBuscar) {
-                                            organizarEAtualizarLista(Categoria(catDoc.id, catNome, produtosDestaCategoria))
+                                            organizarEAtualizarLista(
+                                                Categoria(catDoc.id, catNome, produtosDestaCategoria)
+                                            )
                                         }
                                     }
                                     .addOnFailureListener {
-                                        produtosProcessados++ // Conta mesmo com erro para não travar
+                                        produtosProcessados++
                                         if (produtosProcessados == totalProdutosParaBuscar) {
-                                            organizarEAtualizarLista(Categoria(catDoc.id, catNome, produtosDestaCategoria))
+                                            organizarEAtualizarLista(
+                                                Categoria(catDoc.id, catNome, produtosDestaCategoria)
+                                            )
                                         }
                                     }
                             }
@@ -208,21 +183,14 @@ class CardapioFragment : Fragment() {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("Cardapio", "Erro ao carregar categorias", e)
+                Log.e("Cardapio", getString(R.string.error_load_categories), e)
             }
     }
 
-    // Função auxiliar para evitar concorrência desordenada na UI
-
     private fun organizarEAtualizarLista(novaCategoria: Categoria) {
         listaCategoriasCompletas.add(novaCategoria)
-        // Opcional: Ordenar categorias alfabeticamente ou por ordem específica se tiver campo 'ordem'
-        // listaCategoriasCompletas.sortBy { it.nome }
         categoriaAdapter.notifyDataSetChanged()
     }
-
-    // 3. Adicionar ao Carrinho (Firestore)
-
 
     override fun onDestroyView() {
         super.onDestroyView()

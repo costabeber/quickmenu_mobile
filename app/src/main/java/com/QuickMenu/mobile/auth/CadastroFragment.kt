@@ -7,10 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment // Alterado de AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.QuickMenu.mobile.R
-
 import com.QuickMenu.mobile.databinding.FragmentCadastroBinding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -34,7 +33,6 @@ class CadastroFragment : Fragment() {
         return binding.root
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -44,79 +42,87 @@ class CadastroFragment : Fragment() {
         initListener()
     }
 
-    private fun initListener(){
+    private fun initListener() {
         binding.btnCadastrarUsuario.setOnClickListener {
             validateData()
         }
     }
 
-    private fun validateData(){
+    private fun validateData() {
 
         val nomeUsuario = binding.etNomeUsuario.text.toString().trim()
         val email = binding.etEmailCadastro.text.toString().trim()
         val senha = binding.etSenhaCadastro.text.toString().trim()
 
-        if (nomeUsuario.isEmpty() || email.isEmpty() || senha.isEmpty()) {
-            Toast.makeText(requireContext(), "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
-            return
+        when {
+            nomeUsuario.isEmpty() || email.isEmpty() || senha.isEmpty() -> {
+                Toast.makeText(requireContext(),
+                    getString(R.string.error_empty_fields),
+                    Toast.LENGTH_SHORT).show()
+            }
 
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(requireContext(), "Por favor, insira um e-mail válido.", Toast.LENGTH_SHORT).show()
-            return
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                Toast.makeText(requireContext(),
+                    getString(R.string.error_invalid_email),
+                    Toast.LENGTH_SHORT).show()
+            }
 
-        } else if (senha.length < 6) {
-            Toast.makeText(requireContext(), "A senha deve ter pelo menos 6 caracteres.", Toast.LENGTH_SHORT).show()
-            return
+            senha.length < 6 -> {
+                Toast.makeText(requireContext(),
+                    getString(R.string.error_short_password),
+                    Toast.LENGTH_SHORT).show()
+            }
 
-        } else {
-            registerUser(email,senha)
+            else -> {
+                registerUser(email, senha)
+            }
         }
-
     }
 
-    private fun registerUser(email: String, password: String){
+    private fun registerUser(email: String, password: String) {
         try {
-            auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
 
-                if (task.isSuccessful) {
-                    saveUserData()
-                    findNavController().navigate(R.id.action_cadastroFragment_to_loginFragment)
+                        saveUserData()
+                        findNavController()
+                            .navigate(R.id.action_cadastroFragment_to_loginFragment)
 
-                } else {
-                    binding.progressBar.isVisible = false
-                    Toast.makeText(
-                        requireContext(),
-                        task.exception?.message,
-                        Toast.LENGTH_SHORT,
+                    } else {
+                        binding.progressBar.isVisible = false
+                        Toast.makeText(
+                            requireContext(),
+                            task.exception?.message ?: getString(R.string.error_unknown),
+                            Toast.LENGTH_SHORT
                         ).show()
-
                     }
                 }
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), e.message.toString(), Toast.LENGTH_SHORT).show()
-        }
 
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), e.message ?: getString(R.string.error_unknown), Toast.LENGTH_SHORT).show()
+        }
     }
 
-    private fun saveUserData(){
+    private fun saveUserData() {
 
-        val uid = auth.currentUser?.uid
+        val uid = auth.currentUser?.uid ?: return
         val username = binding.etNomeUsuario.text.toString()
 
         val userMap = hashMapOf(
             "username" to username,
             "email" to auth.currentUser?.email,
-            "profileImageUrl" to "https://ibb.co/d426DjQJ", // Salva o link da foto padrão
+            "profileImageUrl" to getString(R.string.default_profile_image_url)
         )
 
         banco.collection("Usuario")
-            .document(uid.toString())
-            .set(userMap) // Cria o documento com os dados iniciais
+            .document(uid)
+            .set(userMap)
             .addOnSuccessListener {
-                println("Perfil de usuário salvo com sucesso no Firestore: $uid")
+                println("${getString(R.string.profile_saved_success)} $uid")
             }
             .addOnFailureListener { e ->
-                println("Falha ao salvar o perfil no Firestore: ${e.message}")
+                println("${getString(R.string.profile_save_failure)} ${e.message}")
             }
     }
 

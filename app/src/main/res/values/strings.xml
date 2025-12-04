@@ -1,6 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Quick Menu</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- Erros de validação -->
+    <string name="error_invalid_email">E-mail inválido.</string>
+    <string name="error_short_password">A senha deve ter pelo menos 6 caracteres.</string>
+
+    <!-- Firestore -->
+    <string name="profile_saved_success">Perfil salvo com sucesso:</string>
+    <string name="profile_save_failure">Falha ao salvar o perfil no Firestore:</string>
+
+    <!-- URL ou texto padrão para imagem de perfil -->
+    <!-- Ajuste se for uma URL real -->
+    <string name="default_profile_image_url">default_profile.png</string>
+    <!-- Login -->
+    <string name="login_success">Login realizado com sucesso!</string>
+    <string name="login_cadastro_text">Preencha com seus dados para realizar o cadastro</string>
+    <string name="login_cadastro_clickable">cadastro</string>
+
+    <!-- Erros gerais -->
+    <string name="error_empty_fields">Por favor, preencha todos os campos.</string>
+    <string name="error_unknown">Ocorreu um erro inesperado.</string>
+    <!-- Cardápio -->
+    <string name="error_load_restaurant">Erro ao carregar restaurante.</string>
+    <string name="error_navigation">Erro ao navegar: %1$s</string>
+    <string name="error_navigation_default">Erro na navegação.</string>
+    <string name="default_restaurant_name">Restaurante</string>
+    <string name="error_restaurant_not_found">Restaurante não encontrado no banco.</string>
+    <string name="error_connection">Erro de conexão: %1$s</string>
+    <string name="default_category_name">Categoria</string>
+    <string name="error_load_categories">Erro ao carregar categorias.</string>
+    <!-- Toasts e mensagens -->
+    <string name="carrinho_vazio">Seu carrinho está vazio!</string>
+    <string name="pedido_sucesso">Pedido realizado com sucesso!</string>
+    <string name="erro_finalizar">Erro ao finalizar: %1$s</string>
+
+    <!-- Logs -->
+    <string name="log_carrinho_erro_ouvir">Erro ao ouvir carrinho</string>
+    <string name="log_carrinho_erro_update">Erro update:</string>
+    <string name="log_carrinho_erro_delete">Erro delete:</string>
+    <string name="log_carrinho_erro_batch">Erro batch:</string>
+
+    <!-- Itens de teste -->
+    <string name="item_teste_nome">Item Teste</string>
+    <string name="item_teste_id">ID_%1$d</string>
+
+    <!-- Campos -->
+    <string name="total_titulo">Total (%1$d)</string>
+
+    <!-- Firebase / Coleções -->
+    <string name="firebase_usuario">Usuario</string>
+    <string name="firebase_pedidos">Pedidos</string>
+    <string name="firebase_itens">Itens</string>
+    <string name="firebase_carrinho">Carrinho</string>
+    <!-- Logs -->
+    <string name="log_erro_navegar">Erro ao navegar: %1$s</string>
+    <string name="log_produtos_recentes_vazio">Nenhum produto recente encontrado.</string>
+    <string name="log_erro_produtos_recentes">Erro ao buscar produtos recentes</string>
+
+    <!-- Favoritos -->
+    <string name="favoritos">Favoritos</string>
+
+    <!-- Busca -->
+    <string name="erro_filtro_restaurantes">Erro ao filtrar restaurantes</string>
+
+
 </resources>
